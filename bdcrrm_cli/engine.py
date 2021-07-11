@@ -72,7 +72,7 @@ class ExecutionEngine():
         graph_manager.add_vertex(**execution_metadata)
 
         # save execution graph
-        GraphPersistencePickle.save_graph(self._metadata_dir, graph_manager.graph)
+        GraphPersistencePickle.save_graph(graph_manager.graph, self._metadata_dir)
 
 
 __all__ = (

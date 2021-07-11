@@ -112,7 +112,7 @@ def reprozip_execution_metadata(repropack_directory: str, working_directories: L
         )
 
     pack_path = os.path.join(repropack_directory, "pack.rpz")
-    reprozip_execution_config = yaml.read(RPZPack(pack_path).open_config())
+    reprozip_execution_config = yaml.load(RPZPack(pack_path).open_config(), Loader=yaml.Loader)
     
     return {
         "repropack": pack_path,

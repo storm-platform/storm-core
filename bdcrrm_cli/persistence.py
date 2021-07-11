@@ -41,7 +41,12 @@ class GraphPersistencePickle(object):
         Returns:
             igraph.Graph: Graph loaded from a persistence store.
         """
-        return Graph.Read_Pickle(os.path.join(directory, GraphPersistenceConfig.GRAPH_DEFAULT_PICKLE_NAME))
+
+        # ToDo: Review this return
+        try:
+            return Graph.Read_Pickle(os.path.join(directory, GraphPersistenceConfig.GRAPH_DEFAULT_PICKLE_NAME))
+        except:
+            return None
 
 
 __all__ = (
