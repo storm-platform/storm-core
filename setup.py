@@ -50,6 +50,11 @@ setup_requires = [
 
 install_requires = [
     'Click>=7.0',
+    'dictdiffer>=0.8.1',
+    'py-multihash>=2.0.1',
+    'python-igraph>=0.9.6',
+    'reprozip>=1.1',
+    'rpaths>=1.0.0'
 ]
 
 packages = find_packages()
