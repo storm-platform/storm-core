@@ -11,5 +11,10 @@
 
 class EnvironmentConfig:
     """Base configuration."""
-
     REPROPACK_BASE_PATH = ".bdcrrm"
+    REPROPACK_EXEC_PATH = "executions"  # in this case: ".bdcrrm/executions/<execution_uuid>"
+
+
+class GraphPersistenceConfig:
+    """Graph Persistence configuration."""
+    GRAPH_DEFAULT_PICKLE_NAME = "meta"

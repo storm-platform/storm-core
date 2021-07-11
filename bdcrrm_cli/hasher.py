@@ -77,3 +77,8 @@ def multihash_checksum_sha256(data: Union[str, list, Path]):
     _hash = _multihash.encode(digest=digest, code=sha256, length=sha256_length)
 
     return _multihash.to_hex_string(_hash)
+
+
+__all__ = (
+    "multihash_checksum_sha256"
+)

@@ -27,13 +27,13 @@ class VertexStatus:
 class ExecutionGraphManager:
     """Execution Graph Manager.
 
-    This class is responsible for the management of execution graphs,
-    which are used to keep track of the execution history of the CLI.
+    This class is responsible for the management of execution graphs, which are used to keep 
+    track of the execution history of the CLI.
     """
 
-    def __init__(self):
+    def __init__(self, graph: Graph = None):
         """Create Execution Graph Manager."""
-        self._graph = Graph(directed = True)
+        self._graph = graph or Graph(directed = True)
 
     @property
     def graph(self) -> Graph:
