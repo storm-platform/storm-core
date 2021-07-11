@@ -54,7 +54,8 @@ install_requires = [
     'py-multihash>=2.0.1',
     'python-igraph>=0.9.6',
     'reprozip>=1.1',
-    'rpaths>=1.0.0'
+    'rpaths>=1.0.0',
+    'reprounzip>=1.1'
 ]
 
 packages = find_packages()
