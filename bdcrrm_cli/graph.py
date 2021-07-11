@@ -244,7 +244,15 @@ def plot_execution_graph(graph_manager: ExecutionGraphManager, filename: str, st
     visual_style["layout"] = _graph.layout_lgl()
     
     if status_colors:
-        visual_style["vertex_color"] = [status_colors[x[0]] for x in _graph.vs["status"]]
+        vertex_colors = []
+        for status in _graph.vs["status"]:
+            # ToDo: Investigate why this type change occurs
+            if isinstance(status, str):
+                vertex_colors.append(status_colors[status])
+            else:
+                vertex_colors.append(status_colors[status[0]])
+
+        visual_style["vertex_color"] = vertex_colors
 
     if kwargs:
         visual_style.update(kwargs)
