@@ -146,9 +146,15 @@ def plot_graph(obj, output_file):
     """Plot the actual execution graph."""
     from ..graph import plot_execution_graph
 
+    from ..graph import ExecutionGraphManager
+    from ..persistence import GraphPersistencePickle
+
+    g = GraphPersistencePickle.load_graph(EnvironmentConfig.REPROPACK_BASE_PATH)
+    graph_manager = ExecutionGraphManager(g)
+
     engine = obj["execution_engine"]
 
-    plot_execution_graph(engine, output_file, status_colors={
+    plot_execution_graph(graph_manager, output_file, status_colors={
         "outdated": "pink",
         "updated": "blue"
     })
