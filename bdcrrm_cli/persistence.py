@@ -9,6 +9,12 @@
 """Brazil Data Cube Reproducible Research Persistence Operations."""
 
 import os
+
+import bagit
+import shutil
+
+from tempfile import mkdtemp
+
 from igraph import Graph
 
 from .config import GraphPersistenceConfig
@@ -47,6 +53,40 @@ class GraphPersistencePickle(object):
             return Graph.Read_Pickle(os.path.join(directory, GraphPersistenceConfig.GRAPH_DEFAULT_PICKLE_NAME))
         except:
             return None
+
+
+class BagItExporter(object):
+    """Exporter to save a experiment project in BagIt organization."""
+
+    @staticmethod
+    def export(project_name: str, project_dir: str, output_dir: str, hashing_processes: int = 1) -> str:
+        """Export an analysis project to a BagIt zip file.
+
+        Args:
+            project_name (str): Name of the project to be exported.
+
+            project_dir (str): Directory where the project is located.
+
+            output_dir (str): Directory where the project will be exported.
+
+            hashing_processes (int): Number of processes to use for hashing files.
+
+        Returns:
+            str: Path to the exported bagit zip file.
+
+        See:
+            The BagIt File Packaging Format (V1.0): https://www.ietf.org/rfc/rfc8493.txt
+        """
+        tmp_directory = os.path.join(mkdtemp(), "bdcrrm")
+        shutil.copytree(project_dir, tmp_directory)
+
+        # do bagit! 
+        bagit.make_bag(tmp_directory, processes=hashing_processes)
+
+        os.makedirs(output_dir, exist_ok=True)
+        shutil.make_archive(
+            os.path.join(output_dir, project_name), "zip", tmp_directory
+        )
 
 
 __all__ = (

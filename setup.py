@@ -56,7 +56,8 @@ install_requires = [
     'reprozip>=1.1',
     'rpaths>=1.0.0',
     'reprounzip>=1.1',
-    'pandas>=1.3.0'
+    'pandas>=1.3.0',
+    'bagit>=1.8.1'
 ]
 
 packages = find_packages()
