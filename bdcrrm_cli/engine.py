@@ -9,6 +9,9 @@
 """Brazil Data Cube Reproducible Research Management Executor Engine."""
 
 import os
+
+import shutil
+
 from typing import List
 
 from .reprozip import reprozip_execute_script, reprozip_execution_metadata
@@ -48,6 +51,30 @@ class ExecutionEngine():
 
         self._graph_manager = self._load_graph_manager()  # what about this ?
 
+    def _remove_unused_execution_files(self):
+        """Remove execution files that are not linked to any vertex."""
+        
+        # get files from execution directory
+        execution_files_stored_dir = os.path.join(self._metadata_dir, EnvironmentConfig.REPROPACK_EXEC_PATH)
+        execution_files_stored = os.listdir(execution_files_stored_dir)
+
+        # get the registered files
+        execution_files_valid_on_graph = self._graph_manager.to_frame(dim = "vertex")
+        execution_files_valid_on_graph = execution_files_valid_on_graph["repropack"]
+
+        # only the basename
+        execution_files_stored = list(map(os.path.basename, execution_files_stored))
+        execution_files_valid_on_graph = list(map(lambda x: x.split(os.sep)[-2], execution_files_valid_on_graph))
+
+        # get the symmetric difference to define the files to remove
+        execution_files_to_remove = set(execution_files_stored).symmetric_difference(set(execution_files_valid_on_graph))
+
+        # remove the files
+        for execution_file in execution_files_to_remove:
+            shutil.rmtree(
+                os.path.join(execution_files_stored_dir, execution_file)
+            )
+
     def _load_graph_manager(self) -> ExecutionGraphManager:
         """Load the Execution Graph Manager linked to the executions.
         
@@ -65,16 +92,18 @@ class ExecutionEngine():
         GraphPersistencePickle.save_graph(graph_manager.graph, self._metadata_dir)
 
     # bdcrrm `run` `command`
-    def execute(self, command: str):
+    def execute(self, command: str, remove_previous_execution_files: bool = True):
         """Execute a User Defined Command with ReproZip Trace System.
         
         Args:
             command (str): User Defined Command.
+
+            remove_previous_execution_files (bool): Flag to indicate whether or not directories from 
+            previous runs should be removed from the `REPROPACK_BASE_PATH`.
         
         Returns:
             None: 
         """
-
         # prepare commands to execute
         command = command.split()
         binary_command = command[0]
@@ -89,11 +118,11 @@ class ExecutionEngine():
         # save execution graph
         self._save_graph_manager(self._graph_manager)
 
-    def remake(self):  # what about this name ?
-        """Remake the execution graph where vertex is `outdated`
+        if remove_previous_execution_files:
+            self._remove_unused_execution_files()
 
-        For each vertex with status equals to `VertexStatus.Outdated`
-        """
+    def remake(self):  # what about this name ?
+        """Remake the execution graph where vertices is `outdated`."""
 
         for vertex_index in self._graph_manager.graph.topological_sorting(mode = "out"):
             vertex = self._graph_manager.graph.vs[vertex_index]

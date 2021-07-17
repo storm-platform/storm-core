@@ -8,6 +8,8 @@
 
 """Graph Manager."""
 
+import pandas as pd
+
 from datetime import datetime
 from typing import Dict, List
 
@@ -44,6 +46,16 @@ class ExecutionGraphManager:
     def vertices(self) -> VertexSeq:
         """Return the vertices of the execution graph in a `igraph.VertexSeq` object."""
         return self._graph.copy().vs
+
+    def to_frame(self, dim="vertex") -> pd.DataFrame:
+        """Return the vertices rel"""
+
+        if dim not in ("vertex", "edge"):
+            raise RuntimeError("`dim` must be `vertex` or `edge`.")
+        
+        # introspecting to retrieve operation
+        frame_op = getattr(self._graph, f"get_{dim}_dataframe")
+        return frame_op()
 
     def _define_who_vertex_is_outdated(self, vertex, reference_date) -> None:
         """Define who the vertex is outdated.

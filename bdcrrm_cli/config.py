@@ -8,13 +8,15 @@
 
 """Brazil Data Cube Reproducible Research Management CLI Configurations."""
 
+import os
+
 
 class EnvironmentConfig:
     """Base configuration."""
-    REPROPACK_BASE_PATH = ".bdcrrm"
-    REPROPACK_EXEC_PATH = "executions"  # in this case: ".bdcrrm/executions/<execution_uuid>"
+    REPROPACK_BASE_PATH = os.environ.get("REPROPACK_BASE_PATH", ".bdcrrm")
+    REPROPACK_EXEC_PATH = os.environ.get("REPROPACK_EXEC_PATH", "executions")
 
 
 class GraphPersistenceConfig:
     """Graph Persistence configuration."""
-    GRAPH_DEFAULT_PICKLE_NAME = "meta"
+    GRAPH_DEFAULT_PICKLE_NAME = "meta"  # frozen
