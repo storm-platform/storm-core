@@ -90,5 +90,6 @@ class BagItExporter(object):
 
 
 __all__ = (
+    "BagItExporter",
     "GraphPersistencePickle"
 )
