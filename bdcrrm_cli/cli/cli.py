@@ -130,7 +130,8 @@ def produce(obj):
 def reproduce(obj):
     """Reproduce analysis results commands group"""
 
-    raise NotImplementedError("Operation not implemented yet")
+    engine = obj["execution_engine"]
+    engine.reproduce()
 
 
 @execution.group(name = "utilities")

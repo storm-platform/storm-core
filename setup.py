@@ -56,10 +56,12 @@ install_requires = [
     'reprozip>=1.1',
     'rpaths>=1.0.0',
     'reprounzip>=1.1',
+    'reprounzip-docker>=1.1',
     'pandas>=1.3.0',
     'bagit>=1.8.1',
     'yamlize>=0.7.0',
-    'cookiecutter>=1.7.3'
+    'cookiecutter>=1.7.3',
+    'plumbum>=1.7.0'
 ]
 
 packages = find_packages()

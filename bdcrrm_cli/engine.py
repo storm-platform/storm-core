@@ -11,9 +11,10 @@
 import os
 
 import shutil
-
 from typing import List
+from tempfile import mkdtemp
 
+import plumbum
 from .reprozip import reprozip_execute_script, reprozip_execution_metadata
 
 from .config import EnvironmentConfig
@@ -128,6 +129,39 @@ class ExecutionEngine():
 
             if vertex["status"] == VertexStatus.Outdated:
                 self.execute(vertex["command"])
+
+    def reproduce(self):  # what about this name ?
+        """Reproduce each of the operations of the execution graph in an isolated environment."""
+
+        for vertex_index in self._graph_manager.graph.topological_sorting(mode = "out"):
+            vertex = self._graph_manager.graph.vs[vertex_index]
+
+            print(f"Reproducing: {vertex['command']}")
+            print(f"Checksum: {vertex['command_checksum']}")
+
+            # setup the experiment using the reprounzip
+            experiment_reproduction_path = os.path.join(mkdtemp(), "reproduction")
+            
+            (
+                plumbum.cmd.reprounzip[
+                "docker", "setup", vertex["repropack"], experiment_reproduction_path
+                ]
+            )()
+
+            # execute the experiment
+            (
+                plumbum.cmd.reprounzip[
+                    "docker", "run", experiment_reproduction_path
+                ]
+            )()
+
+            # download the results
+            (
+
+                plumbum.cmd.reprounzip[
+                    "docker", "download", experiment_reproduction_path, "--all"
+                ]
+            )()
 
 
 __all__ = (
