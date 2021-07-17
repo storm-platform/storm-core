@@ -91,7 +91,6 @@ class ExecutionEngine():
         """
         GraphPersistencePickle.save_graph(graph_manager.graph, self._metadata_dir)
 
-    # bdcrrm `run` `command`
     def execute(self, command: str, remove_previous_execution_files: bool = True):
         """Execute a User Defined Command with ReproZip Trace System.
         

@@ -47,6 +47,11 @@ class ExecutionGraphManager:
         """Return the vertices of the execution graph in a `igraph.VertexSeq` object."""
         return self._graph.copy().vs
 
+    @property
+    def has_outdated_vertices(self) -> bool:
+        """Return if the graph has outdated vertices."""
+        return len(self._graph.vs.select(status = VertexStatus.Outdated)) > 0
+
     def to_frame(self, dim="vertex") -> pd.DataFrame:
         """Return the vertices rel"""
 

@@ -59,7 +59,7 @@ class BagItExporter(object):
     """Exporter to save a experiment project in BagIt organization."""
 
     @staticmethod
-    def export(project_name: str, project_dir: str, output_dir: str, hashing_processes: int = 1) -> str:
+    def export(project_name: str, project_meta_dir: str, output_dir: str, hashing_processes: int = 1) -> str:
         """Export an analysis project to a BagIt zip file.
 
         Args:
@@ -78,7 +78,7 @@ class BagItExporter(object):
             The BagIt File Packaging Format (V1.0): https://www.ietf.org/rfc/rfc8493.txt
         """
         tmp_directory = os.path.join(mkdtemp(), "bdcrrm")
-        shutil.copytree(project_dir, tmp_directory)
+        shutil.copytree(project_meta_dir, tmp_directory)
 
         # do bagit! 
         bagit.make_bag(tmp_directory, processes=hashing_processes)

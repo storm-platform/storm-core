@@ -11,6 +11,11 @@
 import os
 
 
+class ProjectConfig:
+    """Project configuration."""
+    PROJECT_DEFAULT_FILENAME = "project.yml"
+
+
 class EnvironmentConfig:
     """Base configuration."""
     REPROPACK_BASE_PATH = os.environ.get("REPROPACK_BASE_PATH", ".bdcrrm")
