@@ -14,7 +14,7 @@ from typing import List
 from .reprozip import reprozip_execute_script, reprozip_execution_metadata
 
 from .config import EnvironmentConfig
-from .graph import ExecutionGraphManager
+from .graph import ExecutionGraphManager, VertexStatus
 
 from .persistence import GraphPersistencePickle
 
@@ -46,6 +46,24 @@ class ExecutionEngine():
             [working_dir, *additional_working_directories] if additional_working_directories else [self._working_dir]
         )
 
+        self._graph_manager = self._load_graph_manager()  # what about this ?
+
+    def _load_graph_manager(self) -> ExecutionGraphManager:
+        """Load the Execution Graph Manager linked to the executions.
+        
+        Returns:
+            ExecutionGraphManager: Execution graph.
+        """
+        return ExecutionGraphManager(GraphPersistencePickle.load_graph(self._metadata_dir))
+
+    def _save_graph_manager(self, graph_manager: ExecutionGraphManager):
+        """Save the Execution Graph Manager linked to the executions.
+        
+        Args:
+            graph_manager (ExecutionGraphManager): Execution Graph Manager instance.
+        """
+        GraphPersistencePickle.save_graph(graph_manager.graph, self._metadata_dir)
+
     # bdcrrm `run` `command`
     def execute(self, command: str):
         """Execute a User Defined Command with ReproZip Trace System.
@@ -63,16 +81,25 @@ class ExecutionEngine():
 
         # execute script with ReproZip (trace and pack)
         repropack_directory = reprozip_execute_script(self._reprofiles_directory, binary_command, command)
-        
-        # load execution graph
-        graph_manager = ExecutionGraphManager(GraphPersistencePickle.load_graph(self._metadata_dir))
-        
+                
         # save reprozip execution into the execution graph
         execution_metadata = reprozip_execution_metadata(repropack_directory, self._additional_working_directories)
-        graph_manager.add_vertex(**execution_metadata)
+        self._graph_manager.add_vertex(**execution_metadata)
 
         # save execution graph
-        GraphPersistencePickle.save_graph(graph_manager.graph, self._metadata_dir)
+        self._save_graph_manager(self._graph_manager)
+
+    def remake(self):  # what about this name ?
+        """Remake the execution graph where vertex is `outdated`
+
+        For each vertex with status equals to `VertexStatus.Outdated`
+        """
+
+        for vertex_index in self._graph_manager.graph.topological_sorting(mode = "out"):
+            vertex = self._graph_manager.graph.vs[vertex_index]
+
+            if vertex["status"] == VertexStatus.Outdated:
+                self.execute(vertex["command"])
 
 
 __all__ = (

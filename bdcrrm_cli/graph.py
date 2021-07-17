@@ -14,7 +14,7 @@ from typing import Dict, List
 from dictdiffer import diff
 from igraph import Graph, VertexSeq, plot
 
-from bdcrrm_cli.hasher import multihash_checksum_sha256
+from .hasher import multihash_checksum_sha256
 
 
 class VertexStatus:
@@ -36,7 +36,7 @@ class ExecutionGraphManager:
         self._graph = graph or Graph(directed = True)
 
     @property
-    def graph(self) -> Graph:
+    def graph(self) -> Graph:  # we need expose the graph ?
         """Return the execution graph in a `igraph.Graph` object."""
         return self._graph.copy()
 
@@ -103,6 +103,7 @@ class ExecutionGraphManager:
                 repropack = repropack,
                 updated_in = datetime.now(),
                 status = VertexStatus.Updated,
+                command = " ".join(command),
                 command_checksum = _command_checksum,
             )
 
@@ -169,11 +170,13 @@ class ExecutionGraphManager:
                 vertex_attributes, variables, ignore=invalid_variables
             ))
 
-            if differences:  # only update if there are differences
-                vertex["updated_in"] = datetime.now()
+            if differences:  # only update attributes if there are differences
                 vertex.update_attributes({ k: variables[k] for k in variables.keys() if k not in invalid_variables })
 
-                self._define_who_vertex_is_outdated(vertex, vertex["updated_in"])
+            vertex["status"] = VertexStatus.Updated
+            vertex["updated_in"] = datetime.now()
+
+            self._define_who_vertex_is_outdated(vertex, vertex["updated_in"])
 
     def delete_vertex(self, command: List[str]) -> None:
         """Delete a vertex from the execution graph.
