@@ -57,7 +57,9 @@ install_requires = [
     'rpaths>=1.0.0',
     'reprounzip>=1.1',
     'pandas>=1.3.0',
-    'bagit>=1.8.1'
+    'bagit>=1.8.1',
+    'yamlize>=0.7.0',
+    'cookiecutter>=1.7.3'
 ]
 
 packages = find_packages()
@@ -88,6 +90,9 @@ setup(
     include_package_data=True,
     platforms='any',
     entry_points={
+        'console_scripts': [
+            'bdcrrm-cli = bdcrrm_cli.cli.cli:cli'
+        ]
     },
     extras_require=extras_require,
     install_requires=install_requires,
