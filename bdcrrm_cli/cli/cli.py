@@ -13,7 +13,7 @@ import os
 import click
 from datetime import datetime
 
-from .operations import load_project
+from .operations import load_currently_project
 from ..config import EnvironmentConfig
 
 TEMPLATE_REPOSITORY = "https://github.com/M3nin0/bdcrrm-project-cookiecutter"
@@ -25,8 +25,13 @@ def cli():
     """Brazil Data Cube Reproducible Research Management CLI"""
 
 
-@cli.command(name="init")
-def init():
+@cli.group(name="project")
+def project():
+    """Project commands"""
+
+
+@project.command(name="init")
+def project_init():
     """Initialize a project"""
     from cookiecutter.main import cookiecutter
 
@@ -35,23 +40,29 @@ def init():
     })
 
 
-@cli.group(name="project")
-@click.pass_context
-def project(ctx):
-    """Project commands group"""
+@project.command(name="import")
+@click.option("-f", "--project-file", required=True,
+              help="BagIt zip file with the project files that will be imported.")
+@click.option("-d", "--output-dir", required=True,
+              help="Directory where the restored project will be stored.")
+@click.option("--checksum-processors", default=1,
+              help="Number of processes used to calculate the files checksum during the exporting.")
+def project_import(project_file, output_dir, checksum_processors):
+    """Import a finalized project to reproduce and explore."""
+    from .operations import import_finalized_project
 
-    if ctx.obj is None:
-        ctx.obj = dict()
+    click.secho("Importing project files...", bold=True)
+    info = import_finalized_project(project_file, output_dir, checksum_processors)
 
-    ctx.obj["actual_project"] = load_project()
+    click.secho(f"{info[0]} imported!")
+    click.secho(f"The {info[0]} project is available on: {info[1]}")
 
 
 @project.command(name="show")
-@click.pass_obj
-def project_show(obj):
+def project_show():
     """Show project details"""
 
-    project = obj["actual_project"]
+    project = load_currently_project()
 
     click.secho("Project details", bold=True)
     click.secho("----------------", bold=True)
@@ -77,7 +88,7 @@ def project_export(output_dir, checksum_processors):
     """Export project to a directory"""
     from ..persistence import BagItExporter
 
-    project = load_project()
+    project = load_currently_project()
 
     # Export all project elements
     BagItExporter.export(project.metadata.name, EnvironmentConfig.REPROPACK_BASE_PATH, output_dir, checksum_processors)
@@ -92,7 +103,7 @@ def execution(ctx):
     if ctx.obj is None:
         ctx.obj = dict()
 
-    project = load_project()
+    project = load_currently_project()
     engine = ExecutionEngine(
         os.getcwd(),
         EnvironmentConfig.REPROPACK_BASE_PATH,

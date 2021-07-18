@@ -18,8 +18,8 @@ class ProjectConfig:
 
 class EnvironmentConfig:
     """Base configuration."""
-    REPROPACK_BASE_PATH = os.environ.get("REPROPACK_BASE_PATH", ".bdcrrm")
-    REPROPACK_EXEC_PATH = os.environ.get("REPROPACK_EXEC_PATH", "executions")
+    REPROPACK_BASE_PATH = ".bdcrrm"
+    REPROPACK_EXEC_PATH = "executions"
 
 
 class GraphPersistenceConfig:
