@@ -121,7 +121,11 @@ class ExecutionEngine(object):
         import itertools
         from .reprozip import filter_reprozip_config_files
 
-        output_generated_by_graph_vertices = list(itertools.chain(*self._graph_manager.graph.vs["outputs"]))
+        # in the first execution, the graph don't have any attributes
+        if not self._graph_manager.graph.attributes():
+            output_generated_by_graph_vertices = []
+        else:
+            output_generated_by_graph_vertices = list(itertools.chain(*self._graph_manager.graph.vs["outputs"]))
         filter_reprozip_config_files(repropack_directory, self._datasources, output_generated_by_graph_vertices)
 
     def execute(self, command: str, remove_previous_execution_files: bool = True):
@@ -195,7 +199,6 @@ class ExecutionEngine(object):
 
             # download the results
             (
-
                 plumbum.cmd.reprounzip[
                     "docker", "download", experiment_reproduction_path, "--all"
                 ]
