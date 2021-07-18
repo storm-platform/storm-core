@@ -61,7 +61,8 @@ install_requires = [
     'bagit>=1.8.1',
     'yamlize>=0.7.0',
     'cookiecutter>=1.7.3',
-    'plumbum>=1.7.0'
+    'plumbum>=1.7.0',
+    'ruamel.yaml>=0.17.10'
 ]
 
 packages = find_packages()
@@ -76,7 +77,7 @@ setup(
     version=version,
     description=__doc__,
     long_description=readme + '\n\n' + history,
-    long_description_content_type = 'text/x-rst',
+    long_description_content_type='text/x-rst',
     keywords=['Time series', 'Earth Observations'],
     license='MIT',
     author='Brazil Data Cube Team',

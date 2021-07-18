@@ -15,33 +15,34 @@ from yamlize import Object, Attribute
 class ProjectLicenses(Object):
     """Represents a project licenses."""
 
-    code = Attribute(type = str)
-    data = Attribute(type = str)
-    text = Attribute(type = str)
+    code = Attribute(type=str)
+    data = Attribute(type=str)
+    text = Attribute(type=str)
 
 
 class ProjectMetadata(Object):
     """Project metadata."""
 
-    name = Attribute(type = str)
-    description = Attribute(type = str)
-    licenses = Attribute(type = ProjectLicenses)
+    name = Attribute(type=str)
+    description = Attribute(type=str)
+    licenses = Attribute(type=ProjectLicenses)
 
-    author = Attribute(type = str)
-    creation = Attribute(type = ruamel.yaml.timestamp.TimeStamp)
+    author = Attribute(type=str)
+    creation = Attribute(type=ruamel.yaml.timestamp.TimeStamp)
 
 
 class ProjectConfiguration(Object):
     """Project configuration."""
 
-    working_directories = Attribute(type = list)
+    working_directories = Attribute(type=list)
+    datasources = Attribute(type=dict)
 
 
 class Project(Object):
     """Represents a project."""
 
-    metadata = Attribute(type = ProjectMetadata)
-    config = Attribute(type = ProjectConfiguration)
+    metadata = Attribute(type=ProjectMetadata)
+    config = Attribute(type=ProjectConfiguration)
 
 
 def load_project(project_file: str) -> Project:
@@ -85,7 +86,7 @@ __all__ = (
     "ProjectMetadata",
     "ProjectLicenses",
     "ProjectConfiguration",
-    
+
     "load_project",
     "dump_project",
 )
