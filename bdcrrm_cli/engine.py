@@ -122,7 +122,7 @@ class ExecutionEngine(object):
         from .reprozip import filter_reprozip_config_files
 
         # in the first execution, the graph don't have any attributes
-        if not self._graph_manager.graph.attributes():
+        if len(self._graph_manager.graph.vs) == 0:
             output_generated_by_graph_vertices = []
         else:
             output_generated_by_graph_vertices = list(itertools.chain(*self._graph_manager.graph.vs["outputs"]))
@@ -175,6 +175,7 @@ class ExecutionEngine(object):
     def reproduce(self):  # what about this name ?
         """Reproduce each of the operations of the execution graph in an isolated environment."""
 
+        output_files = []
         for vertex_index in self._graph_manager.graph.topological_sorting(mode="out"):
             vertex = self._graph_manager.graph.vs[vertex_index]
 
@@ -190,6 +191,18 @@ class ExecutionEngine(object):
                 ]
             )()
 
+            # upload previous step generated files as input to currently step
+            if output_files:
+                vertex_output_files = list(map(os.path.basename, vertex["outputs"]))
+                output_files = list(set(output_files).intersection(vertex_output_files))
+
+                for output_file in output_files:
+                    (
+                        plumbum.cmd.reprounzip[
+                            "docker", "upload", experiment_reproduction_path, f"{output_file}:{output_file}"
+                        ]
+                    )()
+
             # execute the experiment
             (
                 plumbum.cmd.reprounzip[
@@ -203,6 +216,10 @@ class ExecutionEngine(object):
                     "docker", "download", experiment_reproduction_path, "--all"
                 ]
             )()
+
+            # find output files from current directory
+            output_files.extend(os.listdir())
+            shutil.rmtree(experiment_reproduction_path)
 
 
 __all__ = (
