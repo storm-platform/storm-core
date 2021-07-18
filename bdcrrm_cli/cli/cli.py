@@ -59,7 +59,9 @@ def project_import(project_file, output_dir, checksum_processors):
 
 
 @project.command(name="show")
-def project_show():
+@click.option("--graph", required=False, is_flag=True, default=False,
+              help="Flag to indicate that the generated graph with the runs should be displayed.")
+def project_show(graph: bool):
     """Show project details."""
     project = load_currently_project()
 
@@ -77,6 +79,17 @@ def project_show():
 
     click.secho("Created:", bold=True)
     click.secho(f"    {project.metadata.creation}")
+
+    if graph:
+        click.secho("Execution Graph:", bold=True)
+
+        try:
+            from .operations import ascii_dag, load_currently_graph
+            ascii_dag(load_currently_graph())
+        except ModuleNotFoundError:
+            click.secho("To visualize the graph it is necessary to install the `asciidag` "
+                        "library. To do so, use:")
+            click.secho("\t pip install asciidag", bold=True)
 
 
 @project.command(name="export")

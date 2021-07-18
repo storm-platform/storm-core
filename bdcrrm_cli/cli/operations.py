@@ -11,10 +11,11 @@
 import os
 import shutil
 from tempfile import mkdtemp
-from typing import Tuple
+from typing import List, Tuple
 
 import bagit
 import click
+from igraph import Graph
 
 from ..config import EnvironmentConfig, ProjectConfig
 from ..project import Project, load_project
@@ -45,6 +46,13 @@ def check_if_project_is_valid():
             "The project file does not exist. " +
             f"To create one, please use the `bdcrrm-cli project init` command."
         )
+
+
+def load_currently_graph() -> Graph:
+    """Load the graph associated with the current project."""
+
+    from ..persistence import GraphPersistencePickle
+    return GraphPersistencePickle.load_graph(EnvironmentConfig.REPROPACK_BASE_PATH)
 
 
 def load_currently_project() -> Project:
@@ -109,3 +117,54 @@ def import_finalized_project(project_file: str, base_directory: str, processes: 
     os.chmod(reproduction_script, 0o775)
 
     return project_definition.metadata.name, base_project_path
+
+
+def ascii_dag(graph: Graph):
+    """Generate a ASCII Directed Acyclic Graph (DAG).
+
+    Args:
+        graph (igraph.Graph): Graph instance that is used to generate the ASCII DAG.
+
+    Returns:
+        None: Graph is presented on terminal stdout.
+    """
+
+    from asciidag.graph import Graph as AsciiGraph
+    from asciidag.node import Node
+
+    def vertex_parents(vertex_id: int, edgelist: List[Tuple]) -> List[Tuple]:
+        """Return all vertex parents based on a edge list.
+
+        Args:
+            vertex_id (int): Vertex ID.
+
+            edgelist (List[Tuple]): List with tuples with all graph edges.
+
+        Returns:
+            List[Tuple]: Edges that is related to `vertex_id`.
+        """
+        return list(
+            filter(
+                lambda x: x[0] == vertex_id, edgelist
+            )
+        )
+
+    ascii_nodes = []
+    ascii_graph = AsciiGraph()
+
+    # generate ascii nodes
+    edgelist = graph.get_edgelist()
+    nodes = {
+        v.index: Node(f"{str(v.index)} ({v['command']})") for v in graph.vs
+    }
+
+    # connect the nodes
+    for vertex in graph.vs:
+        node_parents = vertex_parents(vertex.index, edgelist)
+
+        nodes[vertex.index].parents.extend([
+            nodes[i[1]] for i in node_parents
+        ])
+
+    # show!
+    ascii_graph.show_nodes(list(nodes.values()))
