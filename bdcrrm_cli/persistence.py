@@ -26,7 +26,7 @@ class GraphPersistencePickle(object):
     @staticmethod
     def save_graph(graph, directory):
         """Save a graph to a persistence store into a pickle file.
-        
+
         Args:
             graph (igraph.Graph): Graph to be saved.
 
@@ -40,7 +40,7 @@ class GraphPersistencePickle(object):
     @staticmethod
     def load_graph(directory):
         """Load a graph from a persistence store.
-        
+
         Args:
             directory (str): Directory where the `meta` graph file is located.
 
@@ -65,7 +65,7 @@ class BagItExporter(object):
         Args:
             project_name (str): Name of the project to be exported.
 
-            project_dir (str): Directory where the project is located.
+            project_meta_dir (str): Directory where the project is located.
 
             output_dir (str): Directory where the project will be exported.
 
@@ -80,13 +80,14 @@ class BagItExporter(object):
         tmp_directory = os.path.join(mkdtemp(), "bdcrrm")
         shutil.copytree(project_meta_dir, tmp_directory)
 
-        # do bagit! 
+        # do bagit!
         bagit.make_bag(tmp_directory, processes=hashing_processes)
 
         os.makedirs(output_dir, exist_ok=True)
-        shutil.make_archive(
-            os.path.join(output_dir, project_name), "zip", tmp_directory
-        )
+        output_path = os.path.join(output_dir, project_name)
+
+        shutil.make_archive(output_path, "zip", tmp_directory)
+        return output_path
 
 
 __all__ = (

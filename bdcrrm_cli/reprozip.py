@@ -14,6 +14,7 @@ import os
 import uuid
 from typing import Dict, List
 
+import fnmatch
 from rpaths import Path
 from ruamel.yaml import YAML
 
@@ -89,13 +90,13 @@ def _exclude_execution_input_files_by_datasources(reprozip_execution_config: Dic
 
         datasources (List[Dict[str, str]]): The datasources definitions. This definition is a dictionary in
         which each key is the name of a datasource. The content associated with each key is a dictionary
-        with `path` and `action` fields. These respectively indicate the path to the directory and the
-        action to be taken (`exclude` or `include`). If the action is `exclude`, the directory is not
-        included in the generated Repropack. An example of `datasource` is:
+        with `pattern` and `action` fields. These respectively indicate the path to the data pattern
+        (Unix Name patterns interpreted by `fnmatch`) and the action to be taken (`exclude` or `include`). If the
+        action is `exclude`, the directory is not included in the generated Repropack. An example of `datasource` is:
 
             {
                 "datasource1": {
-                    "path": "/path/to/datasource1/",
+                    "pattern": "/path/to/datasource1/*.txt",
                     "action": "exclude"
                 }
             }
@@ -107,15 +108,15 @@ def _exclude_execution_input_files_by_datasources(reprozip_execution_config: Dic
         The `other_files` section of the reprozip configuration file (config.yaml) is used because it
         contains the information about files/directories that are not attached to any OS package.
         Thus data files are kept in this section.
+
+    See:
+        https://docs.python.org/pt-br/3/library/fnmatch.html
     """
     for datasource_key in datasources.keys():
         datasource = datasources[datasource_key]
-        datasource_path = Path(datasource["path"])
 
         for idx, other_file in enumerate(reprozip_execution_config["other_files"]):
-            other_file_path = Path(other_file)
-
-            if other_file_path.lies_under(datasource_path):
+            if fnmatch.fnmatch(other_file, datasource["pattern"]):
                 if datasource["action"] == "exclude":
                     reprozip_execution_config["other_files"][idx] = None
 
@@ -133,13 +134,13 @@ def filter_reprozip_config_files(repropack_directory: str, datasources: dict,
 
         datasources (List[Dict[str, str]]): The datasources definitions. This definition is a dictionary in
         which each key is the name of a datasource. The content associated with each key is a dictionary
-        with `path` and `action` fields. These respectively indicate the path to the directory and the
-        action to be taken (`exclude` or `include`). If the action is `exclude`, the directory is not
-        included in the generated Repropack. An example of `datasource` is:
+        with `pattern` and `action` fields. These respectively indicate the path to the data pattern
+        (Unix Name patterns interpreted by `fnmatch`) and the action to be taken (`exclude` or `include`). If the
+        action is `exclude`, the directory is not included in the generated Repropack. An example of `datasource` is:
 
             {
                 "datasource1": {
-                    "path": "/path/to/datasource1/",
+                    "pattern": "/path/to/datasource1/*.txt",
                     "action": "exclude"
                 }
             }
@@ -148,6 +149,9 @@ def filter_reprozip_config_files(repropack_directory: str, datasources: dict,
 
     Returns:
         None: The filter modifications is saved in the ReproZip execution metadata (`config.yml`) file.
+
+    See:
+        https://docs.python.org/pt-br/3/library/fnmatch.html
     """
 
     config_file = os.path.join(repropack_directory, "config.yml")
@@ -246,7 +250,7 @@ def reprozip_execution_metadata(repropack_directory: str, working_directories: L
     """
 
     # ToDo: Maybe this filter function is temporary. In the future, the complete object will be used.
-    def _extract_path(input_output_config: str):
+    def _extract_path(input_output_config: List[Dict]):
         """Extract only `path` key from input/output ReproZip directory."""
 
         return list(

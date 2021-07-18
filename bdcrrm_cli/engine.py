@@ -9,18 +9,16 @@
 """Brazil Data Cube Reproducible Research Management Executor Engine."""
 
 import os
-
 import shutil
-from typing import Dict, List
 from tempfile import mkdtemp
+from typing import Dict, List
 
 import plumbum
-from .reprozip import reprozip_execute_script, reprozip_execution_metadata, reprozip_pack_execution
 
 from .config import EnvironmentConfig
 from .graph import ExecutionGraphManager, VertexStatus
-
 from .persistence import GraphPersistencePickle
+from .reprozip import reprozip_execute_script, reprozip_execution_metadata, reprozip_pack_execution
 
 
 class ExecutionEngine(object):
@@ -175,7 +173,7 @@ class ExecutionEngine(object):
     def reproduce(self):  # what about this name ?
         """Reproduce each of the operations of the execution graph in an isolated environment."""
 
-        output_files = []
+        previous_output_files = []
         for vertex_index in self._graph_manager.graph.topological_sorting(mode="out"):
             vertex = self._graph_manager.graph.vs[vertex_index]
 
@@ -192,14 +190,14 @@ class ExecutionEngine(object):
             )()
 
             # upload previous step generated files as input to currently step
-            if output_files:
-                vertex_output_files = list(map(os.path.basename, vertex["outputs"]))
-                output_files = list(set(output_files).intersection(vertex_output_files))
+            if previous_output_files:
+                vertex_input_files = list(map(os.path.basename, vertex["inputs"]))
+                vertex_input_files = list(set(previous_output_files).intersection(vertex_input_files))
 
-                for output_file in output_files:
+                for input_file in vertex_input_files:
                     (
                         plumbum.cmd.reprounzip[
-                            "docker", "upload", experiment_reproduction_path, f"{output_file}:{output_file}"
+                            "docker", "upload", experiment_reproduction_path, f"{input_file}:{input_file}"
                         ]
                     )()
 
@@ -218,7 +216,7 @@ class ExecutionEngine(object):
             )()
 
             # find output files from current directory
-            output_files.extend(os.listdir())
+            previous_output_files.extend(os.listdir())
             shutil.rmtree(experiment_reproduction_path)
 
 
