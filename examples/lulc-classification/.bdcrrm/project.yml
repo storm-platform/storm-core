@@ -1,0 +1,22 @@
+metadata:
+  name: bdcrrm-lulc-classification
+  
+  description: Reproducible data analysis project created with bdcrrm-cli.
+
+  licenses:
+    code: MIT
+    data: MIT
+    text: MIT
+
+  author: Felipe Menino
+
+  creation: 2021-07-18T20:42:47.422838
+
+config:
+  working_directories:
+    - ./
+
+  datasources:
+    foo:
+      pattern: /foo/*
+      action: include # or exclude
