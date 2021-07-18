@@ -18,7 +18,8 @@ import plumbum
 from .config import EnvironmentConfig
 from .graph import ExecutionGraphManager, VertexStatus
 from .persistence import GraphPersistencePickle
-from .reprozip import reprozip_execute_script, reprozip_execution_metadata, reprozip_pack_execution
+from .reprozip import (reprozip_execute_script, reprozip_execution_metadata,
+                       reprozip_pack_execution)
 
 
 class ExecutionEngine(object):
@@ -62,7 +63,6 @@ class ExecutionEngine(object):
 
     def _remove_unused_execution_files(self):
         """Remove execution files that are not linked to any vertex."""
-
         # get files from execution directory
         execution_files_stored_dir = os.path.join(self._metadata_dir, EnvironmentConfig.REPROPACK_EXEC_PATH)
         execution_files_stored = os.listdir(execution_files_stored_dir)
@@ -117,6 +117,7 @@ class ExecutionEngine(object):
             None: the configuration file (config.yml) into `repropack_directory` is updated.
         """
         import itertools
+
         from .reprozip import filter_reprozip_config_files
 
         # in the first execution, the graph don't have any attributes
@@ -163,7 +164,6 @@ class ExecutionEngine(object):
 
     def remake(self):  # what about this name ?
         """Remake the execution graph where vertices is `outdated`."""
-
         for vertex_index in self._graph_manager.graph.topological_sorting(mode="out"):
             vertex = self._graph_manager.graph.vs[vertex_index]
 
@@ -172,7 +172,6 @@ class ExecutionEngine(object):
 
     def reproduce(self):  # what about this name ?
         """Reproduce each of the operations of the execution graph in an isolated environment."""
-
         previous_output_files = []
         for vertex_index in self._graph_manager.graph.topological_sorting(mode="out"):
             vertex = self._graph_manager.graph.vs[vertex_index]

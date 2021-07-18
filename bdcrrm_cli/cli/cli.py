@@ -9,12 +9,12 @@
 """Brazil Data Cube Reproducible Research Command-Line Interface."""
 
 import os
-
-import click
 from datetime import datetime
 
-from .operations import load_currently_project
+import click
+
 from ..config import EnvironmentConfig
+from .operations import load_currently_project
 
 TEMPLATE_REPOSITORY = "https://github.com/M3nin0/bdcrrm-project-cookiecutter"
 
@@ -22,17 +22,17 @@ TEMPLATE_REPOSITORY = "https://github.com/M3nin0/bdcrrm-project-cookiecutter"
 @click.group()
 @click.version_option()
 def cli():
-    """Brazil Data Cube Reproducible Research Management CLI"""
+    """Brazil Data Cube Reproducible Research Management CLI."""
 
 
 @cli.group(name="project")
 def project():
-    """Project commands"""
+    """Project commands."""
 
 
 @project.command(name="init")
 def project_init():
-    """Initialize a project"""
+    """Initialize a project."""
     from cookiecutter.main import cookiecutter
 
     cookiecutter(TEMPLATE_REPOSITORY, extra_context={
@@ -60,8 +60,7 @@ def project_import(project_file, output_dir, checksum_processors):
 
 @project.command(name="show")
 def project_show():
-    """Show project details"""
-
+    """Show project details."""
     project = load_currently_project()
 
     click.secho("Project details", bold=True)
@@ -85,7 +84,7 @@ def project_show():
 @click.option("--checksum-processors", default=1,
               help="Number of processes used to calculate the files checksum during the exporting.")
 def project_export(output_dir, checksum_processors):
-    """Export project to a directory"""
+    """Export project to a directory."""
     from ..persistence import BagItExporter
 
     project = load_currently_project()
@@ -97,7 +96,7 @@ def project_export(output_dir, checksum_processors):
 @cli.group(name="execution")
 @click.pass_context
 def execution(ctx):
-    """Execution commands to produce or reproduce a project analysis."""
+    """Execute a project analysis for produce, reproduce or rerun."""
     from ..engine import ExecutionEngine
 
     if ctx.obj is None:
@@ -120,7 +119,6 @@ def execution(ctx):
 @click.pass_obj
 def produce(obj, command):
     """Execute scripts in a reproducible way."""
-
     if not command:
         raise click.BadParameter(
             "To produce a reproducible result you need to specify the command that will be used to " +
@@ -135,7 +133,6 @@ def produce(obj, command):
 @click.pass_obj
 def produce(obj):
     """Execute scripts in a reproducible way."""
-
     engine = obj["execution_engine"]
     engine.remake()
 
@@ -143,26 +140,22 @@ def produce(obj):
 @execution.command(name="reproduce")
 @click.pass_obj
 def reproduce(obj):
-    """Reproduce analysis results commands group"""
-
+    """Reproduce analysis results commands group."""
     engine = obj["execution_engine"]
     engine.reproduce()
 
 
 @execution.group(name="utilities")
 def utilities():
-    """Execution utilities commands."""
+    """Utilities commands."""
 
 
 @utilities.command(name="plot-graph")
 @click.option("-f", "--output-file", required=True,
               help="File where the execution graph should be plotted..")
-@click.pass_obj
-def plot_graph(obj, output_file):
+def plot_graph(output_file):
     """Plot the actual execution graph."""
-    from ..graph import plot_execution_graph
-
-    from ..graph import ExecutionGraphManager
+    from ..graph import ExecutionGraphManager, plot_execution_graph
     from ..persistence import GraphPersistencePickle
 
     g = GraphPersistencePickle.load_graph(EnvironmentConfig.REPROPACK_BASE_PATH)

@@ -8,17 +8,16 @@
 
 """Brazil Data Cube Reproducible Research Command-Line Interface Operations."""
 
-import bagit
 import os
+import shutil
+from tempfile import mkdtemp
+from typing import Tuple
 
+import bagit
 import click
 
-import shutil
-from typing import Tuple
-from tempfile import mkdtemp
-
-from ..project import Project, load_project
 from ..config import EnvironmentConfig, ProjectConfig
+from ..project import Project, load_project
 
 
 def get_project_file() -> str:
@@ -33,7 +32,7 @@ def get_project_file() -> str:
 
 
 def check_if_project_is_valid():
-    """Checks that the commands are being executed in a directory of a valid bdcrrm project.
+    """Check that the execution commands are being executed in a valid `bdcrrm` project directory.
 
     Raises:
         click.FileError: If the project file is not valid.
@@ -77,7 +76,6 @@ def import_finalized_project(project_file: str, base_directory: str, processes: 
     Returns:
         Tuple[str, str]: Tuple with the project name and the path to the imported files.
     """
-
     # extract and validate bagit
     tmp_dir = mkdtemp()
 

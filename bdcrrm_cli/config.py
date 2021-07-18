@@ -8,20 +8,21 @@
 
 """Brazil Data Cube Reproducible Research Management CLI Configurations."""
 
-import os
-
 
 class ProjectConfig:
     """Project configuration."""
+
     PROJECT_DEFAULT_FILENAME = "project.yml"
 
 
 class EnvironmentConfig:
     """Base configuration."""
+
     REPROPACK_BASE_PATH = ".bdcrrm"
     REPROPACK_EXEC_PATH = "executions"
 
 
 class GraphPersistenceConfig:
     """Graph Persistence configuration."""
+
     GRAPH_DEFAULT_PICKLE_NAME = "meta"  # frozen

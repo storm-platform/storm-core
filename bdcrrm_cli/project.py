@@ -9,7 +9,7 @@
 """Brazil Data Cube Reproducible Research Project definitions."""
 
 import ruamel
-from yamlize import Object, Attribute
+from yamlize import Attribute, Object
 
 
 class ProjectLicenses(Object):
@@ -57,7 +57,6 @@ def load_project(project_file: str) -> Project:
     Raises:
         Exception: If the project file cannot be loaded.
     """
-
     with open(project_file, "r") as stream:
         return Project.load(stream)
 
@@ -76,7 +75,6 @@ def dump_project(project: Project, file: str) -> None:
     Raises:
         Exception: If the project file cannot be dumped.
     """
-
     with open(file, "w") as stream:
         return Project.dump(project, stream)
 

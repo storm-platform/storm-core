@@ -9,12 +9,10 @@
 """Brazil Data Cube Reproducible Research Persistence Operations."""
 
 import os
-
-import bagit
 import shutil
-
 from tempfile import mkdtemp
 
+import bagit
 from igraph import Graph
 
 from .config import GraphPersistenceConfig
@@ -47,7 +45,6 @@ class GraphPersistencePickle(object):
         Returns:
             igraph.Graph: Graph loaded from a persistence store.
         """
-
         # ToDo: Review this return
         try:
             return Graph.Read_Pickle(os.path.join(directory, GraphPersistenceConfig.GRAPH_DEFAULT_PICKLE_NAME))

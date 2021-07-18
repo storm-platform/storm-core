@@ -11,7 +11,8 @@
 
 from pytest import fixture
 
-from bdcrrm_cli.reprozip import _extract_execution_input_by_working_dir, _extract_execution_output
+from bdcrrm_cli.reprozip import (_extract_execution_input_by_working_dir,
+                                 _extract_execution_output)
 
 
 @fixture
@@ -22,7 +23,7 @@ def reprozip_config_file():
                 "read_by_runs": [0],
                 "written_by_runs": [],
                 "path": "/system/directory/so.lib"
-            }, 
+            },
             { # 2
                 "read_by_runs": [0],
                 "written_by_runs": [],

@@ -8,28 +8,27 @@
 
 """Reprozip Wrapper."""
 
-from bdcrrm_cli.config import EnvironmentConfig
+import fnmatch
 import os
-
 import uuid
 from typing import Dict, List
 
-import fnmatch
+from reprounzip.common import RPZPack
+from reprozip.pack import pack
+from reprozip.tracer import trace
 from rpaths import Path
 from ruamel.yaml import YAML
 
-from reprozip.pack import pack
-from reprozip.tracer import trace
-from reprounzip.common import RPZPack
+from bdcrrm_cli.config import EnvironmentConfig
 
 
 def _generate_uuid() -> str:
-    """Generate a valid UUID4"""
+    """Generate a valid UUID4."""
     return str(uuid.uuid4())
 
 
 def _filter_none_values(values: List) -> List:
-    """Remove none values from an list of values
+    """Remove none values from an list of values.
 
     Args:
         values (List): List of values
@@ -153,7 +152,6 @@ def filter_reprozip_config_files(repropack_directory: str, datasources: dict,
     See:
         https://docs.python.org/pt-br/3/library/fnmatch.html
     """
-
     config_file = os.path.join(repropack_directory, "config.yml")
     reprozip_execution_config = YAML().load(open(config_file))
 
@@ -228,7 +226,6 @@ def _extract_command(reprozip_execution_config: Dict) -> List[str]:
     Returns:
         List[str]: The execution command.
     """
-
     # in bdcrrm, the reprozip execution strategy always generate a unique execution per command
     return reprozip_execution_config["runs"][0]["argv"]
 
@@ -248,11 +245,16 @@ def reprozip_execution_metadata(repropack_directory: str, working_directories: L
             - `inputs`: The execution input files;
             - `outputs`: The execution output files;
     """
-
     # ToDo: Maybe this filter function is temporary. In the future, the complete object will be used.
-    def _extract_path(input_output_config: List[Dict]):
-        """Extract only `path` key from input/output ReproZip directory."""
+    def _extract_path(input_output_config: List[Dict]) -> List[str]:
+        """Extract only `path` key from input/output ReproZip directory.
 
+        Args:
+            input_output_config (List[Dict]): List of dict with the input/output references.
+
+        Returns:
+            List[str]: List of str with the content of `path` key of each object into `input_output_config`.
+        """
         return list(
             map(
                 lambda obj: obj["path"], input_output_config
@@ -290,7 +292,6 @@ def reprozip_execute_script(reprofiles_directory: str, binary_command: str, argu
     Returns:
         str: The `repropack` directory where ReproZip trace saves the execution files.
     """
-
     repropack_directory = os.path.join(reprofiles_directory, EnvironmentConfig.REPROPACK_EXEC_PATH, _generate_uuid())
     os.makedirs(repropack_directory)
 

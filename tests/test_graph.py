@@ -8,13 +8,13 @@
 
 """Unit-test for ExecutionGraphManager class"""
 
-from bdcrrm_cli.hasher import multihash_checksum_sha256
 from tempfile import mkstemp
 from typing import Tuple
 
 from pytest import fixture
 
 from bdcrrm_cli.graph import ExecutionGraphManager, VertexStatus
+from bdcrrm_cli.hasher import multihash_checksum_sha256
 
 
 @fixture
@@ -58,14 +58,14 @@ def reprozip_processes() -> Tuple[str, str, str, str]:
 
 
 def test_when_4_process_is_added_to_graph_4_vertex_should_be_created(reprozip_processes):
-    
+
     graph_manager = ExecutionGraphManager()
 
     graph_manager.add_vertex(*reprozip_processes[0])
     graph_manager.add_vertex(*reprozip_processes[1])
     graph_manager.add_vertex(*reprozip_processes[2])
     graph_manager.add_vertex(*reprozip_processes[3])
-    
+
     assert len(graph_manager.vertices) == 4
 
 

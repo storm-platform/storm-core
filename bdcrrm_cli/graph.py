@@ -8,11 +8,10 @@
 
 """Graph Manager."""
 
-import pandas as pd
-
 from datetime import datetime
 from typing import Dict, List
 
+import pandas as pd
 from dictdiffer import diff
 from igraph import Graph, VertexSeq, plot
 
@@ -53,8 +52,7 @@ class ExecutionGraphManager:
         return len(self._graph.vs.select(status=VertexStatus.Outdated)) > 0
 
     def to_frame(self, dim="vertex") -> pd.DataFrame:
-        """Return the vertices rel"""
-
+        """Return the vertices rel."""
         if dim not in ("vertex", "edge"):
             raise RuntimeError("`dim` must be `vertex` or `edge`.")
 
@@ -242,7 +240,6 @@ def plot_execution_graph(graph_manager: ExecutionGraphManager, filename: str, st
     See:
         https://igraph.org/python/doc/api/igraph.drawing.html#plot
     """
-
     _graph = graph_manager.graph
 
     # define label as status
