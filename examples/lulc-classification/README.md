@@ -82,8 +82,8 @@ bdcrrm-cli project export --output-dir lulc-project
 ```
 
 In the directory created will be a zip file with all the elements needed
-for the playback. To play the exported file, you can import the project
-and then run it:
+for the reproduction. To use the exported file, you can import the
+project and then run it:
 
 ``` shell
 bdcrrm-cli project import -f lulc-project/bdcrrm-lulc-classification.zip -d imported_project
