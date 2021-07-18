@@ -55,7 +55,7 @@ language with the SITS package. The script files are available in the
 > `BDC_ACCESS_KEY` with the access key.
 
 ``` shell
-export BDC_ACCESS_KEY="YOUR_ACCESS_TOKEN_HERE"
+export BDC_ACCESS_KEY=YOUR_ACCESS_TOKEN_HERE
 ```
 
 Once this is set, we can execute the code:
@@ -64,12 +64,12 @@ Once this is set, we can execute the code:
 #
 # Extract the Time Series
 #
-bdcrrm-cli execution produce 'R/01_extract_ts.R'
+bdcrrm-cli execution produce 'Rscript R/01_extract_ts.R'
 
 #
 # Classify the Data Cube rasters
 #
-bdcrrm-cli execution produce 'R/02_classify.R'
+bdcrrm-cli execution produce 'Rscript R/02_classify.R'
 ```
 
 With this, each of the steps have been recorded, allowing these steps to
@@ -78,7 +78,7 @@ be re-executed or even shared with others for re-execution.
 For sharing, you can use the command:
 
 ``` shell
-bdcrrm-cli project export --output-dir my-first-project
+bdcrrm-cli project export --output-dir lulc-project
 ```
 
 In the directory created will be a zip file with all the elements needed
@@ -86,7 +86,7 @@ for the playback. To play the exported file, you can import the project
 and then run it:
 
 ``` shell
-bdcrrm-cli project import -f my-first-project/bdcrrm-project.zip -d imported_project
+bdcrrm-cli project import -f lulc-project/bdcrrm-lulc-classification.zip -d imported_project
 
 cd imported_project && ./reproduce.sh
 ```
