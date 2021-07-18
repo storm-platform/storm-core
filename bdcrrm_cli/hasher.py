@@ -22,18 +22,18 @@ def checksum_string_or_list(string_or_list: str):
 
     # sorting
     string = "".join(sorted(string_or_list))
-    
+
     return hashlib.sha256((''.join(sorted(string))).encode('utf-8')).digest()
 
 
 def checksum_file(file_path: Union[str, Path], chunk_size=16384) -> bytes:
     """Read a file and generate a checksum using `sha256`.
-    
+
     Args:
         file_path (str|Path): Path to the file
-        
+
         chunk_size (int): Size in bytes to read per iteration. Default is 16384 (16KB).
-    
+
     Returns:
         The digest value in bytes.
 
@@ -54,15 +54,15 @@ def checksum_file(file_path: Union[str, Path], chunk_size=16384) -> bytes:
 
 def multihash_checksum_sha256(data: Union[str, list, Path]):
     """Generate the checksum multihash.
-    
+
     This method follows the spec `multihash <https://github.com/multiformats/multihash>`_.
     We use `sha256` as described in ``check_sum``. The multihash spec defines the code `0x12` for `sha256` and
     must have `0x20` (32 chars) length.
     See more in https://github.com/multiformats/py-multihash/blob/master/multihash/constants.py#L4
-    
+
     Args:
         file_path (str|Path): Path to the file
-    
+
     Returns:
         A string-like hash in hex-decimal
     """

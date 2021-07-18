@@ -29,13 +29,13 @@ class VertexStatus:
 class ExecutionGraphManager:
     """Execution Graph Manager.
 
-    This class is responsible for the management of execution graphs, which are used to keep 
+    This class is responsible for the management of execution graphs, which are used to keep
     track of the execution history of the CLI.
     """
 
     def __init__(self, graph: Graph = None):
         """Create Execution Graph Manager."""
-        self._graph = graph or Graph(directed = True)
+        self._graph = graph or Graph(directed=True)
 
     @property
     def graph(self) -> Graph:  # we need expose the graph ?
@@ -50,14 +50,14 @@ class ExecutionGraphManager:
     @property
     def has_outdated_vertices(self) -> bool:
         """Return if the graph has outdated vertices."""
-        return len(self._graph.vs.select(status = VertexStatus.Outdated)) > 0
+        return len(self._graph.vs.select(status=VertexStatus.Outdated)) > 0
 
     def to_frame(self, dim="vertex") -> pd.DataFrame:
         """Return the vertices rel"""
 
         if dim not in ("vertex", "edge"):
             raise RuntimeError("`dim` must be `vertex` or `edge`.")
-        
+
         # introspecting to retrieve operation
         frame_op = getattr(self._graph, f"get_{dim}_dataframe")
         return frame_op()
@@ -75,16 +75,15 @@ class ExecutionGraphManager:
         """
         if vertex["updated_in"] < reference_date:
             vertex["status"] = VertexStatus.Outdated
-        
+
         # only use the "outgoing" edges to define the neighbors
         for vertex_neighbor in vertex.neighbors("out"):
             self._define_who_vertex_is_outdated(vertex_neighbor, reference_date)
 
-
     def add_vertex(self, repropack: str, command: List[str], inputs: Dict[str, Dict], outputs: Dict[str, Dict]) -> None:
         """Add a new vertex to the execution graph.
 
-        This method adds a run with its executed command information created by the ReproZip package to the graph. 
+        This method adds a run with its executed command information created by the ReproZip package to the graph.
         Determining the position of the run on the graph is done based on inputs and outputs.
 
         Args:
@@ -92,9 +91,9 @@ class ExecutionGraphManager:
 
             command (List[str]): A list with the commands executed by the ReproZip package.
 
-            inputs (Dict[Dict]): A dict with `path` and `checksum` of input files. 
+            inputs (Dict[Dict]): A dict with `path` and `checksum` of input files.
 
-            outputs (Dict[Dict]): A dict with `path` and `checksum` of output files. 
+            outputs (Dict[Dict]): A dict with `path` and `checksum` of output files.
 
         Returns:
             None: The new vertex is added or updated.
@@ -114,14 +113,14 @@ class ExecutionGraphManager:
             vertex = actual_vertex[0]
             self.update_vertex(command, repropack, inputs, outputs)
         else:
-            vertex = self._graph.add_vertex(        
-                inputs = inputs,
-                outputs = outputs,
-                repropack = repropack,
-                updated_in = datetime.now(),
-                status = VertexStatus.Updated,
-                command = " ".join(command),
-                command_checksum = _command_checksum,
+            vertex = self._graph.add_vertex(
+                inputs=inputs,
+                outputs=outputs,
+                repropack=repropack,
+                updated_in=datetime.now(),
+                status=VertexStatus.Updated,
+                command=" ".join(command),
+                command_checksum=_command_checksum,
             )
 
         if len(self._graph.vs) > 1:  # If there is more than one node in the graph
@@ -133,7 +132,7 @@ class ExecutionGraphManager:
             # 2. Rebuild edges
             for vertex_l1 in self._graph.vs:
                 reference_outputs = set(vertex_l1["outputs"])
-                
+
                 for vertex_l2 in self._graph.vs:
 
                     if vertex_l1 != vertex_l2:
@@ -142,9 +141,8 @@ class ExecutionGraphManager:
 
         self._define_who_vertex_is_outdated(vertex, vertex["updated_in"])
 
-
-    def update_vertex(self, command: List[str], repropack: str = None, 
-                            inputs: Dict[str, Dict] = None, outputs: Dict[str, Dict] = None) -> None:
+    def update_vertex(self, command: List[str], repropack: str = None,
+                      inputs: Dict[str, Dict] = None, outputs: Dict[str, Dict] = None) -> None:
         """Update a vertex from the execution graph.
 
         This method updates a previously executed execution that is already present in the execution graph.
@@ -154,25 +152,25 @@ class ExecutionGraphManager:
 
             command (List[str]): A list with the commands executed by the ReproZip package.
 
-            inputs (Dict[Dict]): A dict with `path` and `checksum` of input files. 
+            inputs (Dict[Dict]): A dict with `path` and `checksum` of input files.
 
-            outputs (Dict[Dict]): A dict with `path` and `checksum` of output files. 
+            outputs (Dict[Dict]): A dict with `path` and `checksum` of output files.
 
         Returns:
             None: The new vertex is updated.
 
         Note:
-            The determination of the execution already added to the graph is done based on the `command`. 
+            The determination of the execution already added to the graph is done based on the `command`.
             The update considers only the change of `inputs`, `outputs`, and `repropack`.
         """
         _command_checksum = multihash_checksum_sha256(command)
 
-        selected_vertex = self._graph.vs.select(command_checksum = _command_checksum)
+        selected_vertex = self._graph.vs.select(command_checksum=_command_checksum)
         if len(selected_vertex) == 1:  # bingo!
             vertex = selected_vertex[0]
 
             # define what attribute to update
-            variables = { "repropack": repropack, "inputs": inputs, "outputs": outputs }
+            variables = {"repropack": repropack, "inputs": inputs, "outputs": outputs}
             invalid_variables = list(
                 filter(
                     lambda key: variables[key] is None, variables.keys()
@@ -180,7 +178,7 @@ class ExecutionGraphManager:
             )
 
             vertex_attributes = vertex.attributes()
-            vertex_attributes = { key: vertex_attributes[key] for key in variables.keys() }
+            vertex_attributes = {key: vertex_attributes[key] for key in variables.keys()}
 
             # check if the valid attributes differs from the old ones
             differences = list(diff(
@@ -188,7 +186,7 @@ class ExecutionGraphManager:
             ))
 
             if differences:  # only update attributes if there are differences
-                vertex.update_attributes({ k: variables[k] for k in variables.keys() if k not in invalid_variables })
+                vertex.update_attributes({k: variables[k] for k in variables.keys() if k not in invalid_variables})
 
             vertex["status"] = VertexStatus.Updated
             vertex["updated_in"] = datetime.now()
@@ -211,31 +209,40 @@ class ExecutionGraphManager:
             for vertex_neighbor in vertex.neighbors('out'):
                 _delete(vertex_neighbor)
             self._graph.delete_vertices(vertex)
-        
-        selected_vertex = self._graph.vs.selected(command_checksum = _command_checksum)
+
+        selected_vertex = self._graph.vs.selected(command_checksum=_command_checksum)
         if len(selected_vertex) == 1:  # bingo!
             vertex = selected_vertex[0]
 
             _delete(vertex)
 
 
-def plot_execution_graph(graph_manager: ExecutionGraphManager, filename: str, status_colors: Dict[str, str] = None, **kwargs) -> None:
+def plot_execution_graph(graph_manager: ExecutionGraphManager, filename: str, status_colors: Dict[str, str] = None,
+                         **kwargs) -> None:
     """Plot the execution graph.
 
     Args:
-        graph (ExecutionGraphManager): The execution graph manager.
+        graph_manager (ExecutionGraphManager): The execution graph manager.
 
         filename (str): The filename of the graph image.
 
+        status_colors (dict): Dict with the color of each vertex status. The available status is
+        `updated` and `outdated`. A valid dictionary for the definition of colors looks like this:
+
+            {
+                "updated": "blue",
+                "outdated": "pink"
+            }
+
         **kwargs (dict): A dict with extra the plot arguments.
-    
+
     Returns:
         None: The graph is saved on the `filename`.
 
     See:
         https://igraph.org/python/doc/api/igraph.drawing.html#plot
     """
-    
+
     _graph = graph_manager.graph
 
     # define label as status
@@ -247,22 +254,22 @@ def plot_execution_graph(graph_manager: ExecutionGraphManager, filename: str, st
     # Set bbox and margin
     visual_style["bbox"] = (400, 400)
     visual_style["margin"] = 27
-    
+
     # Set vertex colours
     visual_style["vertex_color"] = 'white'
-    
+
     # Set vertex size
     visual_style["vertex_size"] = 45
-    
+
     # Set vertex lable size
     visual_style["vertex_label_size"] = 22
-    
+
     # Don't curve the edges
     visual_style["edge_curved"] = False
-    
+
     # Set the layout
     visual_style["layout"] = _graph.layout_lgl()
-    
+
     if status_colors:
         vertex_colors = []
         for status in _graph.vs["status"]:
