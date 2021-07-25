@@ -11,7 +11,7 @@
 
 from pytest import fixture
 
-from bdcrrm_cli.reprozip import (_extract_execution_input_by_working_dir,
+from bdcrrm_api.reprozip import (_extract_execution_input_by_working_dir,
                                  _extract_execution_output)
 
 
