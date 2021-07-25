@@ -13,8 +13,8 @@ from typing import Tuple
 
 from pytest import fixture
 
-from bdcrrm_cli.graph import ExecutionGraphManager, VertexStatus
-from bdcrrm_cli.hasher import multihash_checksum_sha256
+from bdcrrm_api.graph import ExecutionGraphManager, VertexStatus
+from bdcrrm_api.hasher import multihash_checksum_sha256
 
 
 @fixture
