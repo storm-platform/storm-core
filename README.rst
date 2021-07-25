@@ -55,4 +55,4 @@ About
 =====
 
 
-A CLI to create, manage and reproduce scientific analyses
+API to create, manage and reproduce scientific analyses
