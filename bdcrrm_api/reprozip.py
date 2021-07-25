@@ -19,7 +19,7 @@ from reprozip.tracer import trace
 from rpaths import Path
 from ruamel.yaml import YAML
 
-from bdcrrm_cli.config import EnvironmentConfig
+from .config import EnvironmentConfig
 
 
 def _generate_uuid() -> str:
@@ -245,6 +245,7 @@ def reprozip_execution_metadata(repropack_directory: str, working_directories: L
             - `inputs`: The execution input files;
             - `outputs`: The execution output files;
     """
+
     # ToDo: Maybe this filter function is temporary. In the future, the complete object will be used.
     def _extract_path(input_output_config: List[Dict]) -> List[str]:
         """Extract only `path` key from input/output ReproZip directory.
