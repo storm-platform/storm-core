@@ -7,7 +7,7 @@
 
 
 =====================================================
-Brazil Data Cube Reproducible Research Management CLI
+Brazil Data Cube Reproducible Research Management API
 =====================================================
 
 
