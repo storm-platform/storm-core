@@ -73,12 +73,12 @@ install_requires = [
 packages = find_packages()
 
 g = {}
-with open(os.path.join('bdcrrm_cli', 'version.py'), 'rt') as fp:
+with open(os.path.join('bdcrrm_api', 'version.py'), 'rt') as fp:
     exec(fp.read(), g)
     version = g['__version__']
 
 setup(
-    name='bdcrrm_cli',
+    name='bdcrrm_api',
     version=version,
     description=__doc__,
     long_description=readme + '\n\n' + history,
@@ -99,7 +99,7 @@ setup(
     platforms='any',
     entry_points={
         'console_scripts': [
-            'bdcrrm-cli = bdcrrm_cli.cli.cli:cli'
+            'bdcrrm-cli = bdcrrm_api.cli.cli:cli'
         ]
     },
     extras_require=extras_require,
