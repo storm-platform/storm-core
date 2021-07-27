@@ -67,7 +67,8 @@ install_requires = [
     'yamlize>=0.7.0',
     'cookiecutter>=1.7.3',
     'plumbum>=1.7.0',
-    'ruamel.yaml>=0.17.10'
+    'ruamel.yaml>=0.17.10',
+    'cairocffi>=1.2.0'
 ]
 
 packages = find_packages()
