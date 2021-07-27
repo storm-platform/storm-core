@@ -149,7 +149,8 @@ def ascii_dag(graph: Graph):
             )
         )
 
-    ascii_nodes = []
+    if not graph:
+        return  # initially, the project does not have a graph
     ascii_graph = AsciiGraph()
 
     # generate ascii nodes
