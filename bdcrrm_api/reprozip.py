@@ -190,6 +190,9 @@ def _extract_execution_input_by_working_dir(reprozip_execution_config: Dict,
         The filter is done based on `working_directories`. Therefore, all files inside these directories are considered.
         This heuristic is used to prevent invalid files (e.g., binaries, system libraries) from being used as "input data".
     """
+    if not reprozip_execution_config["inputs_outputs"]:
+        return []
+
     inputs = []
     for working_directory in working_directories:
         for input_output_file in reprozip_execution_config["inputs_outputs"]:
@@ -210,6 +213,9 @@ def _extract_execution_output(reprozip_execution_config: Dict) -> List[Dict]:
     Returns:
         List[Dict]: The execution output files.
     """
+    if not reprozip_execution_config["inputs_outputs"]:
+        return []
+
     outputs = []
     for input_output_file in reprozip_execution_config["inputs_outputs"]:
         if len(input_output_file["written_by_runs"]) != 0:
