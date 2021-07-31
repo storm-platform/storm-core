@@ -173,7 +173,8 @@ class ExecutionEngine(object):
     def reproduce(self):  # what about this name ?
         """Reproduce each of the operations of the execution graph in an isolated environment."""
         previous_output_files = []
-        for vertex_index in self._graph_manager.graph.topological_sorting(mode="out"):
+        current_directory = os.getcwd()
+        for idx, vertex_index in enumerate(self._graph_manager.graph.topological_sorting(mode="out")):
             vertex = self._graph_manager.graph.vs[vertex_index]
 
             print(f"Reproducing: {vertex['command']}")
@@ -191,12 +192,16 @@ class ExecutionEngine(object):
             # upload previous step generated files as input to currently step
             if previous_output_files:
                 vertex_input_files = list(map(os.path.basename, vertex["inputs"]))
-                vertex_input_files = list(set(previous_output_files).intersection(vertex_input_files))
+                vertex_input_files = (
+                    list(filter(lambda x: os.path.basename(x) in vertex_input_files, previous_output_files))
+                )
 
-                for input_file in vertex_input_files:
+                for source_input_file in vertex_input_files:
+                    target_input_file = os.path.basename(source_input_file)
+
                     (
                         plumbum.cmd.reprounzip[
-                            "docker", "upload", experiment_reproduction_path, f"{input_file}:{input_file}"
+                            "docker", "upload", experiment_reproduction_path, f"{source_input_file}:{target_input_file}"
                         ]
                     )()
 
@@ -208,6 +213,10 @@ class ExecutionEngine(object):
             )()
 
             # download the results
+            download_files_path = os.path.join(EnvironmentConfig.REPROPACK_RESULT_PATH, f"step_{idx + 1}")
+            os.makedirs(download_files_path, exist_ok=True)
+
+            os.chdir(download_files_path)
             (
                 plumbum.cmd.reprounzip[
                     "docker", "download", experiment_reproduction_path, "--all"
@@ -215,7 +224,10 @@ class ExecutionEngine(object):
             )()
 
             # find output files from current directory
-            previous_output_files.extend(os.listdir())
+            previous_output_files.extend([os.path.join(download_files_path, file) for file in os.listdir()])
+
+            # return to experiment directory
+            os.chdir(current_directory)
             shutil.rmtree(experiment_reproduction_path)
 
 

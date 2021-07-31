@@ -20,6 +20,7 @@ class EnvironmentConfig:
 
     REPROPACK_BASE_PATH = ".bdcrrm"
     REPROPACK_EXEC_PATH = "executions"
+    REPROPACK_RESULT_PATH = "results"
 
 
 class GraphPersistenceConfig:
