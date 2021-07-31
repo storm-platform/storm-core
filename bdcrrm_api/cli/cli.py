@@ -13,8 +13,8 @@ from datetime import datetime
 
 import click
 
-from ..config import EnvironmentConfig
 from .operations import load_currently_project
+from ..config import EnvironmentConfig
 
 TEMPLATE_REPOSITORY = "https://github.com/M3nin0/bdcrrm-project-cookiecutter"
 
@@ -129,22 +129,32 @@ def execution(ctx):
 
 @execution.command(name="produce")
 @click.argument("command", required=False)
+@click.option("--no-check-graph", required=False, is_flag=True, help="Flag to indicate that the validation of the "
+                                                                     "graph should not be done. A graph is considered "
+                                                                     "valid when no execution node is outdated.")
 @click.pass_obj
-def produce(obj, command):
-    """Execute scripts in a reproducible way."""
-    if not command:
+def produce(obj, command, no_check_graph: bool):
+    """Execute commands in a reproducible way."""
+    if not command or not command.strip():
         raise click.BadParameter(
             "To produce a reproducible result you need to specify the command that will be used to " +
             "execute your script. \n\tFor example: `bdcrrm-cli execution produce 'python3 script.py'`"
         )
 
     engine = obj["execution_engine"]
-    engine.execute(command)
+
+    try:
+        engine.execute(command, check_graph_status=not no_check_graph)
+    except RuntimeError:
+        click.secho("bdcrrm-cli Validation Fail", bold=True)
+        click.echo("A new command cannot be executed, there are commands in the execution graph that need to be "
+                   "updated. You can update the graph by using the `bdcrrm-cli experiment remake` option or by "
+                   "disabling this check with the `--no-check-graph` flag.")
 
 
 @execution.command(name="remake")
 @click.pass_obj
-def produce(obj):
+def remake(obj):
     """Execute scripts in a reproducible way."""
     engine = obj["execution_engine"]
     engine.remake()
