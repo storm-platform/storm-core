@@ -61,7 +61,7 @@ def multihash_checksum_sha256(data: Union[str, list, Path]):
     See more in https://github.com/multiformats/py-multihash/blob/master/multihash/constants.py#L4
 
     Args:
-        file_path (str|Path): Path to the file
+        data Union[str, list, Path]: Path to the file
 
     Returns:
         A string-like hash in hex-decimal

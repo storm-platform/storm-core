@@ -22,8 +22,19 @@ class EnvironmentConfig:
     REPROPACK_EXEC_PATH = "executions"
     REPROPACK_RESULT_PATH = "results"
 
+    REPROPACK_FILES_REFERENCE_PATH = "files"
+
 
 class GraphPersistenceConfig:
     """Graph Persistence configuration."""
 
-    GRAPH_DEFAULT_PICKLE_NAME = "meta"  # frozen
+    GRAPH_DEFAULT_PICKLE_NAME = "meta"
+
+
+class GraphStyleConfig:
+    """Graph Style configuration."""
+
+    GRAPH_DEFAULT_VERTICES_COLOR = {
+        "updated": "green",
+        "outdated": "yellow"
+    }

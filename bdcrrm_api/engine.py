@@ -8,26 +8,25 @@
 
 """Brazil Data Cube Reproducible Research Management Executor Engine."""
 
+import copy
 import os
 import shutil
 from tempfile import mkdtemp
 from typing import Dict, List
 
-import plumbum
-
 from .config import EnvironmentConfig
 from .graph import ExecutionGraphManager, VertexStatus
-from .persistence import GraphPersistencePickle
+from .persistence import GraphPersistencePickle, FilesPersistencePickle
 from .reprozip import (reprozip_execute_script, reprozip_execution_metadata,
-                       reprozip_pack_execution)
+                       reprozip_pack_execution, filter_reprozip_config_files,
+                       reprounzip_setup, reprounzip_upload, reprounzip_run, reprounzip_download_all)
 
 
 class ExecutionEngine(object):
     """Execution Engine."""
 
     def __init__(self, working_dir: str, reprofiles_directory: str,
-                 additional_working_directories: List[str] = None, excluded_paths: List[str] = None,
-                 datasources: Dict[str, Dict] = None):
+                 additional_working_directories: List[str] = None, datasources: Dict[str, Dict] = None):
         """Initialize execution engine.
 
         Args:
@@ -37,29 +36,40 @@ class ExecutionEngine(object):
 
             additional_working_directories (List[str]): List of additional working directories.
 
-            excluded_paths (List[str]): List of paths that is excluded on reprozip package generation.
-
             datasources (Dict[str, Dict]): Definition of datasource that should be considered when building the
             reprozip package. When not set, all files are saved.
 
         Note:
             The working directories are used in determining which are the input and output files of the experiment being
-            performed. By default, only the `working_dir` directory is used. Different directories that must be considered are
-            declared through the `additional_working_directories` argument.
+            performed. By default, only the `working_dir` directory is used. Different directories that must be
+            considered are declared through the `additional_working_directories` argument.
         """
-        self._working_dir = working_dir
         self._reprofiles_directory = reprofiles_directory
-
-        self._metadata_dir = os.path.join(self._working_dir, EnvironmentConfig.REPROPACK_BASE_PATH)
+        self._metadata_dir = os.path.join(working_dir, EnvironmentConfig.REPROPACK_BASE_PATH)
 
         self._datasources = datasources
-        self._excluded_paths = excluded_paths
-
         self._additional_working_directories = (
-            [working_dir, *additional_working_directories] if additional_working_directories else [self._working_dir]
+            [working_dir, *additional_working_directories] if additional_working_directories else [working_dir]
         )
 
         self._graph_manager = self._load_graph_manager()  # what about this ?
+
+    @property
+    def graph_manager(self):
+        """Return a copy of the ExecutionGraphManager object used by the ExecutionEngine instance."""
+        return copy.deepcopy(self._graph_manager)
+
+    def _save_graph_manager(self):
+        """Save the Execution Graph Manager linked to the executions."""
+        GraphPersistencePickle.save_graph(self._graph_manager.graph, self._metadata_dir)
+
+    def _load_graph_manager(self) -> ExecutionGraphManager:
+        """Load the Execution Graph Manager linked to the executions.
+
+        Returns:
+            ExecutionGraphManager: Execution graph.
+        """
+        return ExecutionGraphManager(GraphPersistencePickle.load_graph(self._metadata_dir))
 
     def _remove_unused_execution_files(self):
         """Remove execution files that are not linked to any vertex."""
@@ -85,23 +95,7 @@ class ExecutionEngine(object):
                 os.path.join(execution_files_stored_dir, execution_file)
             )
 
-    def _load_graph_manager(self) -> ExecutionGraphManager:
-        """Load the Execution Graph Manager linked to the executions.
-
-        Returns:
-            ExecutionGraphManager: Execution graph.
-        """
-        return ExecutionGraphManager(GraphPersistencePickle.load_graph(self._metadata_dir))
-
-    def _save_graph_manager(self, graph_manager: ExecutionGraphManager):
-        """Save the Execution Graph Manager linked to the executions.
-
-        Args:
-            graph_manager (ExecutionGraphManager): Execution Graph Manager instance.
-        """
-        GraphPersistencePickle.save_graph(graph_manager.graph, self._metadata_dir)
-
-    def _filter_input_files_in_config_file(self, repropack_directory: str) -> None:
+    def _filter_input_files_in_config_file(self, repropack_directory: str) -> Dict:
         """Filter the files that have been identified as input by ReproZip.
 
         Checks all identified files and excludes those that fit one or more of the patterns listed below:
@@ -115,36 +109,66 @@ class ExecutionEngine(object):
             repropack_directory (str): Path to the reprozip directory.
 
         Returns:
-            None: the configuration file (config.yml) into `repropack_directory` is updated.
+            Dict:  A dictionary with the reference of the files is removed, separated by the used filter
+            method (`graph` and `datasource`).
         """
-        import itertools
+        return filter_reprozip_config_files(repropack_directory, self._datasources, self._graph_manager.outputs)
 
-        from .reprozip import filter_reprozip_config_files
+    def remake(self):  # what about this name ?
+        """Remake the execution graph where vertices is `outdated`."""
+        for vertex_index in self._graph_manager.graph.topological_sorting(mode="out"):
+            vertex = self._graph_manager.graph.vs[vertex_index]
 
-        # in the first execution, the graph don't have any attributes
-        if len(self._graph_manager.graph.vs) == 0:
-            output_generated_by_graph_vertices = []
-        else:
-            output_generated_by_graph_vertices = list(itertools.chain(*self._graph_manager.graph.vs["outputs"]))
-        filter_reprozip_config_files(repropack_directory, self._datasources, output_generated_by_graph_vertices)
+            if vertex["status"] == VertexStatus.Outdated:
+                self.execute(vertex["command"], check_graph_status=False)
 
-    def execute(self, command: str, remove_previous_execution_files: bool = True, check_graph_status: bool = True):
+    def delete_execution(self, command: str, include_neighbors: bool = True) -> None:
+        """Delete a already registered execution.
+
+        Delete a previously registered command from the execution graph. For deletion, two operations modes
+        are available:
+
+          1. Deletion of a node from the graph
+            > For this case, you must then check which nodes have inconsistencies that need to be fixed.
+
+          2. Deletion of a node and its entire neighborhood
+            > Unlike the previous mode, the deletion of the node is done considering its neighborhood, avoiding
+              inconsistency problems.
+
+        Args:
+            command (str): User Defined Command that will be executed and registered.
+
+            include_neighbors (bool): Flag indicating whether the exclusion of the node's neighborhood should
+            be considered. When active, the function represents operation `mode 2`; otherwise, operation
+            `mode 1` is assumed.
+
+        Returns:
+            None: Updates are made to the execution graph.
+        """
+        # prepare command and delete the vertex!
+        command = command.split()
+        self._graph_manager.delete_vertex(command, include_neighbors)
+
+        # save execution graph
+        self._save_graph_manager()
+
+        # removing old execution files
+        self._remove_unused_execution_files()
+
+    def execute(self, command: str, check_graph_status: bool = True) -> None:
         """Execute a User Defined Command with ReproZip Trace System.
 
         Args:
-            command (str): User Defined Command.
-
-            remove_previous_execution_files (bool): Flag to indicate whether or not directories from
-            previous runs should be removed from the `bdcrrm_api.config.REPROPACK_BASE_PATH`.
+            command (str): User Defined Command that will be executed and registered.
 
             check_graph_status (bool): Flag to indicate whether it is necessary to validate the graph before
             execution. A graph is valid when all registered execution nodes have
             `bdcrrm_api.graph.VertexStatus.Updated` status.
 
         Returns:
-            None:
+            None: The execution information is saved directly in the execution graph.
         """
-        if check_graph_status and self._graph_manager.has_outdated_vertices:
+        if check_graph_status and self._graph_manager.is_outdated:
             raise RuntimeError("There are runs that are outdated. Please check the execution graph and update "
                                "it with the `remake` operation.")
 
@@ -156,7 +180,7 @@ class ExecutionEngine(object):
         repropack_directory = reprozip_execute_script(self._reprofiles_directory, binary_command, command)
 
         # filter reprozip config file
-        self._filter_input_files_in_config_file(repropack_directory)
+        unpackaged_files = self._filter_input_files_in_config_file(repropack_directory)
 
         # pack!
         reprozip_pack_execution(repropack_directory)
@@ -166,24 +190,45 @@ class ExecutionEngine(object):
         self._graph_manager.add_vertex(**execution_metadata)
 
         # save execution graph
-        self._save_graph_manager(self._graph_manager)
+        self._save_graph_manager()
 
-        if remove_previous_execution_files:
-            self._remove_unused_execution_files()
+        # save unpackaged files
+        FilesPersistencePickle.save_files(unpackaged_files, self._metadata_dir)
 
-    def remake(self):  # what about this name ?
-        """Remake the execution graph where vertices is `outdated`."""
-        for vertex_index in self._graph_manager.graph.topological_sorting(mode="out"):
-            vertex = self._graph_manager.graph.vs[vertex_index]
+        # removing old execution files
+        self._remove_unused_execution_files()
 
-            if vertex["status"] == VertexStatus.Outdated:
-                self.execute(vertex["command"], check_graph_status=False)
+    def reproduce(self, missing_inputs_to_upload: Dict = None) -> None:  # what about this name ?
+        """Reproduce each of the operations of the execution graph in an isolated environment.
 
-    def reproduce(self):  # what about this name ?
-        """Reproduce each of the operations of the execution graph in an isolated environment."""
+        Args:
+            missing_inputs_to_upload (Dict): Dictionary with reference to the files that should be considered as input
+            for the reproduction. The dictionary must present the `files` and `checksum` keys, were respectively,
+            `files` specifies which files should be used as input and `checksum` with the checksum of the originally
+            used files. An example input file is shown below:
+
+                {
+                    "checksum": {
+                        "file_1.png": "1220...",
+                        ...
+                    },
+                    "files": [
+                        {
+                            "source": "file_1.png",
+                            "target": "path/to/file_1.png/on/the/local/machine"
+                        }
+                    ]
+                }
+
+            This parameter should only be specified when the project package does not have them. Alternatively, this
+            feature can be used for replication runs.
+
+        Returns:
+            None: The reproduction result will be saved on the current directory.
+        """
         previous_output_files = []
         current_directory = os.getcwd()
-        for idx, vertex_index in enumerate(self._graph_manager.graph.topological_sorting(mode="out")):
+        for vertex_index in self._graph_manager.graph.topological_sorting(mode="out"):
             vertex = self._graph_manager.graph.vs[vertex_index]
 
             print(f"Reproducing: {vertex['command']}")
@@ -191,46 +236,53 @@ class ExecutionEngine(object):
 
             # setup the experiment using the reprounzip
             experiment_reproduction_path = os.path.join(mkdtemp(), "reproduction")
+            reprounzip_setup(vertex["repropack"], experiment_reproduction_path)
 
-            (
-                plumbum.cmd.reprounzip[
-                    "docker", "setup", vertex["repropack"], experiment_reproduction_path
-                ]
-            )()
+            # upload missing input files (removed on experiment export with `datasources` options)
+            vertex_inputs_to_define_files = []
+            if missing_inputs_to_upload:
+                vertex_inputs_to_define_files = list(map(os.path.basename, vertex["inputs_to_define"]))
+                vertex_inputs_to_define_files = (
+                    list(map(
+                        lambda x: x["target"],
+                        filter(
+                            lambda x: os.path.basename(x["target"]) in vertex_inputs_to_define_files,
+                            missing_inputs_to_upload["files"]
+                        )
+                    ))
+                )
+
+                # In case of a difference, the reproduction is not possible,
+                # since the files for the experiment are missing
+                if vertex["inputs_to_define"].difference(vertex_inputs_to_define_files):
+                    raise RuntimeError("You cannot run the experiment, there are input files that need to be defined. "
+                                       "Check out the input file.")
 
             # upload previous step generated files as input to currently step
+            vertex_input_files = []
             if previous_output_files:
                 vertex_input_files = list(map(os.path.basename, vertex["inputs"]))
                 vertex_input_files = (
                     list(filter(lambda x: os.path.basename(x) in vertex_input_files, previous_output_files))
                 )
 
-                for source_input_file in vertex_input_files:
-                    target_input_file = os.path.basename(source_input_file)
+            # upload the required inputs
+            vertex_input_files_to_upload = vertex_input_files + vertex_inputs_to_define_files
 
-                    (
-                        plumbum.cmd.reprounzip[
-                            "docker", "upload", experiment_reproduction_path, f"{source_input_file}:{target_input_file}"
-                        ]
-                    )()
+            for source_input_file in vertex_input_files_to_upload:
+                target_input_file = os.path.basename(source_input_file)
+
+                reprounzip_upload(experiment_reproduction_path, source_input_file, target_input_file)
 
             # execute the experiment
-            (
-                plumbum.cmd.reprounzip[
-                    "docker", "run", experiment_reproduction_path
-                ]
-            )()
+            reprounzip_run(experiment_reproduction_path)
 
             # download the results
-            download_files_path = os.path.join(EnvironmentConfig.REPROPACK_RESULT_PATH, f"step_{idx + 1}")
+            download_files_path = os.path.join(EnvironmentConfig.REPROPACK_RESULT_PATH, f"step_{vertex.index}")
             os.makedirs(download_files_path, exist_ok=True)
 
             os.chdir(download_files_path)
-            (
-                plumbum.cmd.reprounzip[
-                    "docker", "download", experiment_reproduction_path, "--all"
-                ]
-            )()
+            reprounzip_download_all(experiment_reproduction_path)
 
             # find output files from current directory
             previous_output_files.extend([os.path.join(download_files_path, file) for file in os.listdir()])
