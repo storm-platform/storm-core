@@ -80,7 +80,7 @@ class ExecutionGraphManager(object):
         """Returns vertices outputs."""
         return list(itertools.chain(*self._graph.vs["outputs"])) if not self.is_empty else []
 
-    def to_frame(self, dim="vertex") -> pd.DataFrame:
+    def to_frame(self, dim="vertex") -> "pandas.core.frame.DataFrame":
         """Return the vertices rel."""
         if dim not in ("vertex", "edge"):
             raise RuntimeError("`dim` must be `vertex` or `edge`.")
