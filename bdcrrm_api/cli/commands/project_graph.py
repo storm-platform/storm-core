@@ -44,7 +44,7 @@ def project_graph_show(obj):
 @click.option("-f", "--output-file", required=True,
               help="File where the execution graph should be plotted..")
 @click.pass_obj
-def plot_graph(obj, output_file):
+def project_graph_plot(obj, output_file):
     """Plot the project execution graph on a file."""
     from ...graph import plot_execution_graph
 
