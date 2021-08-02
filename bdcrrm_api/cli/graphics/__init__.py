@@ -9,17 +9,17 @@
 """Brazil Data Cube Reproducible Research Command-Line Interface Graphics."""
 
 from time import sleep
+from typing import Any
 
 from rich.console import Console
-from rich.markdown import Markdown
 
 
-def aesthetic_print(message: [str, Markdown], wait_time: int = 1, **kwargs):
+def aesthetic_print(message: Any, wait_time: int = 1, **kwargs):
     """Create aesthetic prints.
 
     The function takes objects from the rich library and renders them on the terminal with the `rich.console.Console`.
     Args:
-        message (Union[str, Markdown]): Message (with style) that will be presented.
+        message (Any): Message (with style) that will be presented.
 
         wait_time (int): Waiting time before unlock the terminal.
 

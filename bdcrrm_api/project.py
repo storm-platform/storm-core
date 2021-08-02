@@ -43,6 +43,7 @@ class Project(Object):
 
     metadata = Attribute(type=ProjectMetadata)
     config = Attribute(type=ProjectConfiguration)
+    secrets = Attribute(type=list)
 
 
 def load_project(project_file: str) -> Project:

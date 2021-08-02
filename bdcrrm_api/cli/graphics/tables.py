@@ -8,6 +8,34 @@
 
 """Brazil Data Cube Reproducible Research Command-Line Interface Table Graphics."""
 
+from typing import List, Tuple
+
+from rich.table import Table
+
+
+def table_simple(title: str, columns: List[str], rows: List[Tuple]) -> Table:
+    """Create a simple `rich.table.Table`.
+
+    Args:
+        title (str): Table title.
+
+        columns (List[str]): Table columns.
+
+        rows (List[Tuple]): Table rows (tuples with same length of columns.
+
+    Returns:
+        Table: Created table.
+    """
+    table = Table(show_header=True, header_style="bold", title_justify="center", title=title)
+
+    # adding columns
+    [table.add_column(column, justify="center") for column in columns]
+
+    # adding rows
+    [table.add_row(*row) for row in rows]
+
+    return table
+
 # from rich.console import Console
 # from rich.table import Table
 #

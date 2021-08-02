@@ -16,7 +16,7 @@ from igraph import Graph
 
 from ...config import EnvironmentConfig, ProjectConfig
 from ...engine import ExecutionEngine
-from ...project import Project, load_project
+from ...project import Project, load_project, dump_project
 
 
 def get_project_file() -> str:
@@ -91,6 +91,15 @@ def load_currently_project() -> Project:
     return load_project(get_project_file())
 
 
+def save_currently_project(project: Project):
+    """Save Project file.
+
+    Args:
+        project (Project): Project object.
+    """
+    dump_project(project, get_project_file())
+
+
 def load_currently_execution_engine() -> ExecutionEngine:
     """Load the ExecutionEngine of the current Project.
 
@@ -120,4 +129,6 @@ __all__ = (
     "load_currently_project",
     "load_currently_files",
     "load_currently_execution_engine",
+
+    "save_currently_project"
 )

@@ -16,6 +16,7 @@ import rich.markdown
 
 from .project_graph import graph
 from .project_inputs import inputs
+from .project_settings import settings
 from .utils import load_currently_project, load_currently_execution_engine
 from ..graphics import aesthetic_print
 from ..graphics.graph import show_ascii_execution_graph
@@ -29,12 +30,7 @@ def project():
     """Project commands."""
 
 
-@project.group(name="management")
-def project_management():
-    """Project management commands."""
-
-
-@project_management.command(name="init")
+@project.command(name="init")
 def project_init():
     """Initialize a new Brazil Data Cube Reproducible Research project."""
     from cookiecutter.main import cookiecutter
@@ -45,7 +41,12 @@ def project_init():
     })
 
 
-@project_management.command(name="import")
+@project.group(name="shipment")
+def project_shipment():
+    """Project shipment commands."""
+
+
+@project_shipment.command(name="import")
 @click.option("-f", "--project-file", required=True,
               help="BagIt zip file with the project files that will be imported.")
 @click.option("-d", "--output-dir", required=True,
@@ -71,7 +72,7 @@ def project_import(project_file, output_dir, checksum_processors):
         aesthetic_print(f"[bold cyan]bdcrrm-cli[/bold cyan]: The {info[0]} project is available on: {info[1]}", 1)
 
 
-@project_management.command(name="export")
+@project_shipment.command(name="export")
 @click.option("-o", "--output-dir", required=True, help="output directory.")
 @click.option("--checksum-processors", default=1,
               help="Number of processes used to calculate the files checksum during the exporting.")
@@ -140,3 +141,6 @@ project.add_command(graph)
 
 # add inputs commands to the project group
 project.add_command(inputs)
+
+# add settings command to the project group
+project.add_command(settings)
