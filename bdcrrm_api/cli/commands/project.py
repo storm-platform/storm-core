@@ -69,7 +69,8 @@ def project_import(project_file, output_dir, checksum_processors):
 
     if info:
         aesthetic_print("[bold cyan]bdcrrm-cli[/bold cyan]: The project was been imported!", 1)
-        aesthetic_print(f"[bold cyan]bdcrrm-cli[/bold cyan]: The {info[0]} project is available on: {info[1]}", 1)
+        aesthetic_print(f"[bold cyan]bdcrrm-cli[/bold cyan]: The {info[0].metadata.name} project is "
+                        f"available on: {info[1]}", 1)
 
 
 @project_shipment.command(name="export")

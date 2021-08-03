@@ -60,7 +60,7 @@ class BagItExporter(object):
     """Exporter to save a project into a BagIt organization."""
 
     @staticmethod
-    def load_bagit(project_file: str, base_directory: str, processes: int = 1) -> Tuple[str, str]:
+    def load_bagit(project_file: str, base_directory: str, processes: int = 1) -> Tuple[Project, str]:
         """Import already finished `bdcrrm` project.
 
         Args:
@@ -93,7 +93,15 @@ class BagItExporter(object):
         project_metadata_path = os.path.join(base_project_path, EnvironmentConfig.REPROPACK_BASE_PATH)
 
         shutil.move(exported_files, project_metadata_path)
-        return project_definition.metadata.name, base_project_path
+
+        # create a environment variables file definition (if necessary)
+        secrets_file_definition = os.path.join(base_project_path, "secrets")
+
+        if project_definition.secrets:
+            with open(secrets_file_definition, "w") as ofile:
+                ofile.writelines([f'{line}\n' for line in project_definition.secrets])
+
+        return project_definition, base_project_path
 
     @staticmethod
     def save_bagit(project_name: str, project_meta_dir: str, output_dir: str, hashing_processes: int = 1) -> str:

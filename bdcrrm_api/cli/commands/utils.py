@@ -114,7 +114,8 @@ def load_currently_execution_engine() -> ExecutionEngine:
         os.getcwd(),
         EnvironmentConfig.REPROPACK_BASE_PATH,
         datasources=project.config.datasources,
-        additional_working_directories=project.config.working_directories
+        additional_working_directories=project.config.working_directories,
+        secrets=project.secrets
     )
 
     return engine
