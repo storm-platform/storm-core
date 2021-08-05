@@ -1,5 +1,5 @@
 #
-# This file is part of Brazil Data Cube Reproducible Research Management CLI.
+# This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
 # Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
@@ -7,6 +7,7 @@
 #
 
 """Brazil Data Cube Reproducible Research Management CLI Configurations."""
+from .graph_executor import ReproParaDAGParallelTopologicalExecutor
 
 
 class ProjectConfig:
@@ -38,3 +39,9 @@ class GraphStyleConfig:
         "updated": "green",
         "outdated": "yellow"
     }
+
+
+class ExecutionEngineConfig:
+    """Execution engine configuration."""
+
+    DEFAULT_GRAPH_EXECUTOR_CLASS = ReproParaDAGParallelTopologicalExecutor

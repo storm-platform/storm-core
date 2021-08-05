@@ -1,5 +1,5 @@
 #
-# This file is part of Brazil Data Cube Reproducible Research Management CLI.
+# This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
 # Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
@@ -28,7 +28,7 @@ def aesthetic_print(message: Any, wait_time: int = 1, **kwargs):
         None: The messages will show on the terminal.
     """
 
-    console = Console(**kwargs)
+    console = Console(**kwargs.get("console_options", {}))
 
-    console.print(message)
+    console.print(message, **kwargs.get("print_options", {}))
     sleep(wait_time)

@@ -1,5 +1,5 @@
 #
-# This file is part of Brazil Data Cube Reproducible Research Management CLI.
+# This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
 # Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
@@ -14,7 +14,7 @@ import shutil
 from tempfile import mkdtemp
 from typing import Dict, List
 
-from .config import EnvironmentConfig
+from .config import EnvironmentConfig, ExecutionEngineConfig
 from .graph import ExecutionGraphManager, VertexStatus
 from .persistence import GraphPersistencePickle, FilesPersistencePickle
 from .reprozip import (reprozip_execute_script, reprozip_execution_metadata,
@@ -189,7 +189,96 @@ class ExecutionEngine(object):
         # removing old execution files
         self._remove_unused_execution_files()
 
-    def reproduce(self, missing_inputs_to_upload: Dict = None, missing_environment_variables: List[str] = None) -> None:
+    def _reproduce_operator(self, vertex, previous_output_files: List[str] = [],
+                            missing_inputs_to_upload: Dict = {},
+                            missing_environment_variables: List[str] = []) -> List[str]:
+        """Base operation for experiment reproduction.
+
+        Args:
+            vertex (igraph.Vertex): Vertex that should be executed.
+
+            previous_output_files (List[str]): List of the previous output steps files (For each file a relative or full
+                                               path is expected.
+
+            missing_inputs_to_upload (Dict): Dictionary with reference to the files that should be considered as input
+            for the reproduction.
+
+            missing_environment_variables (List[str]): List of environment variables that should be added on the
+            experiment environment before reproduction.
+
+        Returns:
+            List: List of generated outputs.
+        """
+        current_directory = os.getcwd()  # is assumed that the execution will be in the project directory.
+
+        print(f"Reproducing: {vertex['command']}")
+        print(f"Checksum: {vertex['command_checksum']}")
+
+        # setup the experiment using the reprounzip
+        experiment_reproduction_path = os.path.join(mkdtemp(), "reproduction")
+        reprounzip_setup(vertex["repropack"], experiment_reproduction_path)
+
+        # defining the extras environment variables
+        if missing_environment_variables:
+            reprounzip_add_environment_variables(experiment_reproduction_path, missing_environment_variables)
+
+        # upload missing input files (removed on experiment export with `datasources` options)
+        vertex_inputs_to_define_files = []
+        if missing_inputs_to_upload:
+            vertex_inputs_to_define_files = list(map(os.path.basename, vertex["inputs_to_define"]))
+            vertex_inputs_to_define_files = (
+                list(map(
+                    lambda x: x["target"],
+                    filter(
+                        lambda x: os.path.basename(x["target"]) in vertex_inputs_to_define_files,
+                        missing_inputs_to_upload["files"]
+                    )
+                ))
+            )
+
+            # In case of a difference, the reproduction is not possible,
+            # since the files for the experiment are missing
+            if vertex["inputs_to_define"].difference(vertex_inputs_to_define_files):
+                raise RuntimeError("You cannot run the experiment, there are input files that need to be defined. "
+                                   "Check out the input file.")
+
+        # upload previous step generated files as input to currently step
+        vertex_input_files = []
+        if previous_output_files:
+            vertex_input_files = list(map(os.path.basename, vertex["inputs"]))
+            vertex_input_files = (
+                list(filter(lambda x: os.path.basename(x) in vertex_input_files, previous_output_files))
+            )
+
+        # upload the required inputs
+        vertex_input_files_to_upload = vertex_input_files + vertex_inputs_to_define_files
+
+        for source_input_file in vertex_input_files_to_upload:
+            target_input_file = os.path.basename(source_input_file)
+
+            reprounzip_upload(experiment_reproduction_path, source_input_file, target_input_file)
+
+        # execute the experiment
+        reprounzip_run(experiment_reproduction_path)
+
+        # download the results
+        download_files_path = os.path.join(EnvironmentConfig.REPROPACK_RESULT_PATH, f"step_{vertex.index}")
+        os.makedirs(download_files_path, exist_ok=True)
+
+        os.chdir(download_files_path)
+        reprounzip_download_all(experiment_reproduction_path)
+
+        # find output files from current directory
+        previous_output_files.extend([os.path.join(download_files_path, file) for file in os.listdir()])
+
+        # return to experiment directory
+        os.chdir(current_directory)
+        shutil.rmtree(experiment_reproduction_path)
+
+        return missing_environment_variables
+
+    def reproduce(self, missing_inputs_to_upload: Dict = None, missing_environment_variables: List[str] = None,
+                  processors: int = 4, processor_mode: str = None) -> None:
         """Reproduce each of the operations of the execution graph in an isolated environment.
 
         Args:
@@ -217,76 +306,30 @@ class ExecutionEngine(object):
             missing_environment_variables (List[str]): List of environment variables that should be added on the
             experiment environment before reproduction.
 
+            processors (int): Number of process used to reproduce the experiment. Only define this parameter when
+                              `processor_mode` = `multiple`.
+
+            processor_mode (str): Mode of reproduction execution. This method can assume `single` or `multiple`.
+
         Returns:
             None: The reproduction result will be saved on the current directory.
         """
-        previous_output_files = []
-        current_directory = os.getcwd()
-        for vertex_index in self._graph_manager.graph.topological_sorting(mode="out"):
-            vertex = self._graph_manager.graph.vs[vertex_index]
+        (
+            ExecutionEngineConfig.DEFAULT_GRAPH_EXECUTOR_CLASS.make(
+                self._reproduce_operator,
+                self._graph_manager.graph,
 
-            print(f"Reproducing: {vertex['command']}")
-            print(f"Checksum: {vertex['command_checksum']}")
+                fnc_options=dict(
+                    missing_inputs_to_upload=missing_inputs_to_upload,
+                    missing_environment_variables=missing_environment_variables
+                ),
 
-            # setup the experiment using the reprounzip
-            experiment_reproduction_path = os.path.join(mkdtemp(), "reproduction")
-            reprounzip_setup(vertex["repropack"], experiment_reproduction_path)
-
-            # defining the extras environment variables
-            reprounzip_add_environment_variables(experiment_reproduction_path, missing_environment_variables)
-
-            # upload missing input files (removed on experiment export with `datasources` options)
-            vertex_inputs_to_define_files = []
-            if missing_inputs_to_upload:
-                vertex_inputs_to_define_files = list(map(os.path.basename, vertex["inputs_to_define"]))
-                vertex_inputs_to_define_files = (
-                    list(map(
-                        lambda x: x["target"],
-                        filter(
-                            lambda x: os.path.basename(x["target"]) in vertex_inputs_to_define_files,
-                            missing_inputs_to_upload["files"]
-                        )
-                    ))
+                processor_options=dict(
+                    processors=processors,
+                    processor_mode=processor_mode,
                 )
-
-                # In case of a difference, the reproduction is not possible,
-                # since the files for the experiment are missing
-                if vertex["inputs_to_define"].difference(vertex_inputs_to_define_files):
-                    raise RuntimeError("You cannot run the experiment, there are input files that need to be defined. "
-                                       "Check out the input file.")
-
-            # upload previous step generated files as input to currently step
-            vertex_input_files = []
-            if previous_output_files:
-                vertex_input_files = list(map(os.path.basename, vertex["inputs"]))
-                vertex_input_files = (
-                    list(filter(lambda x: os.path.basename(x) in vertex_input_files, previous_output_files))
-                )
-
-            # upload the required inputs
-            vertex_input_files_to_upload = vertex_input_files + vertex_inputs_to_define_files
-
-            for source_input_file in vertex_input_files_to_upload:
-                target_input_file = os.path.basename(source_input_file)
-
-                reprounzip_upload(experiment_reproduction_path, source_input_file, target_input_file)
-
-            # execute the experiment
-            reprounzip_run(experiment_reproduction_path)
-
-            # download the results
-            download_files_path = os.path.join(EnvironmentConfig.REPROPACK_RESULT_PATH, f"step_{vertex.index}")
-            os.makedirs(download_files_path, exist_ok=True)
-
-            os.chdir(download_files_path)
-            reprounzip_download_all(experiment_reproduction_path)
-
-            # find output files from current directory
-            previous_output_files.extend([os.path.join(download_files_path, file) for file in os.listdir()])
-
-            # return to experiment directory
-            os.chdir(current_directory)
-            shutil.rmtree(experiment_reproduction_path)
+            )
+        )
 
 
 __all__ = (

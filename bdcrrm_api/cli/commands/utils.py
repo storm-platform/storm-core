@@ -1,5 +1,5 @@
 #
-# This file is part of Brazil Data Cube Reproducible Research Management CLI.
+# This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
 # Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
@@ -11,7 +11,6 @@
 import os
 from typing import Dict
 
-import click
 from igraph import Graph
 
 from ...config import EnvironmentConfig, ProjectConfig
@@ -34,13 +33,13 @@ def check_if_project_is_valid():
     """Check that the execution commands are being executed in a valid `bdcrrm` project directory.
 
     Raises:
-        click.FileError: If the project file is not valid.
+        RuntimeError: If the project file is not valid.
     """
     # try to find the project definition file
     project_file = get_project_file()
 
     if not os.path.isfile(project_file):
-        raise click.FileError(
+        raise RuntimeError(
             "The project definition file does not exist or was not found. " +
             f"If needed, please use the `bdcrrm-cli project init` command to create a new project."
         )
@@ -53,13 +52,10 @@ def check_if_execution_command_is_valid(command: str):
     (with or without usage parameters).
 
     Raises:
-        click.FileError: If the command is not valid.
+        ValueError: If the command is not valid
     """
     if not command or not command.strip():
-        raise click.BadParameter(
-            "Invalid command! You need to specify the command using quotation marks. "
-            "For example: \"python3 myscript.py\""
-        )
+        raise ValueError("Invalid command!")
 
 
 def load_currently_graph() -> Graph:

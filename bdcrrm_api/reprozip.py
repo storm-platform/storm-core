@@ -1,5 +1,5 @@
 #
-# This file is part of Brazil Data Cube Reproducible Research Management CLI.
+# This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
 # Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
@@ -78,7 +78,7 @@ def _exclude_execution_input_files_by_already_generated_files(reprozip_execution
                                                               already_generated_files: List[str]) -> Tuple[Dict, List]:
     """Remove files/directories from the configuration file based on already generated files.
 
-    In the bdcrrm-cli the reprozip is being used as a basis for script execution. The outputs are
+    In the bdcrrm-api the reprozip is being used as a basis for script execution. The outputs are
     inserted into the graph and used for the connection operations of each of these. To prevent a
     file that is generated in a previous step of the execution from being included in the package,
     this function filters and removes from the configuration file, all entries that are already

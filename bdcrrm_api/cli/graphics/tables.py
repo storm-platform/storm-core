@@ -1,5 +1,5 @@
 #
-# This file is part of Brazil Data Cube Reproducible Research Management CLI.
+# This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
 # Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
@@ -11,6 +11,10 @@
 from typing import List, Tuple
 
 from rich.table import Table
+
+from . import aesthetic_print
+from ...config import GraphStyleConfig
+from ...graph import VertexStatus
 
 
 def table_simple(title: str, columns: List[str], rows: List[Tuple]) -> Table:
@@ -36,37 +40,52 @@ def table_simple(title: str, columns: List[str], rows: List[Tuple]) -> Table:
 
     return table
 
-# from rich.console import Console
-# from rich.table import Table
-#
-# from bdcrrm_api.graph import VertexStatus
-#
-#
-# def show_table_execution_graph_status(graph_df: 'pandas.core.frame.DataFrame'):
-#     table = Table(title="[bold]Execution Vertex Status[/bold]:", title_justify="left")
-#
-#     # Preparing table columns
-#     table.add_column("Vertex ID", justify="center")
-#     table.add_column("Command", justify="center")
-#     table.add_column("Status", justify="center")
-#
-#     status_color = {
-#         VertexStatus.Updated: "green",
-#         VertexStatus.Outdated: "yellow",
-#         VertexStatus.Invalid: "red"
-#     }
-#
-#     status_color_template = "[bold {color}]{status}:heavy_check_mark:"
-#
-#     # add rows
-#     for _, row in graph_df.iterrows():
-#         # defining status style based on value
-#         row_status = row.status[0]
-#         row_status_color = status_color[row_status]
-#
-#         table.add_row(
-#             str(row.name), row.command, status_color_template.format(color=row_status_color, status=row_status)
-#         )
-#
-#     console = Console()
-#     console.print(table)
+
+def show_table_execution_graph_status(graph_df: 'pandas.core.frame.DataFrame'):
+    """Print a graph as a table.
+
+    Args:
+        graph_df (pandas.core.frame.DataFrame): Graph vertices that will be printed.
+
+    Returns:
+        None: The table will be printed on the terminal.
+    """
+
+    # defining icons for each status (the current available status is: `updated` and `outdated`)
+    emojis = {
+        VertexStatus.Updated: ":heavy_check_mark:",
+        VertexStatus.Outdated: ":cross_mark:"
+    }
+
+    # defining row style
+    row_template = "[bold {color}]{status}[/bold {color}]{emoji}"
+
+    # preparing table columns
+    columns = ["Vertex ID", "Command", "Status"]
+
+    # preparing table rows
+    rows = []
+
+    for _, row in graph_df.iterrows():
+        # defining status style based on value
+        row_status = row.status
+        row_emoji = emojis[row_status]
+        row_status_color = GraphStyleConfig.GRAPH_DEFAULT_VERTICES_COLOR[row_status]
+
+        rows.append((
+            str(row.name), row.command, row_template.format(color=row_status_color, status=row_status, emoji=row_emoji)
+        ))
+
+    table = table_simple(
+        title="[bold]Execution vertices status[/bold]",
+        columns=columns,
+        rows=rows,
+    )
+
+    aesthetic_print(table, 0)
+
+
+__all__ = (
+    "table_simple",
+    "show_table_execution_graph_status"
+)

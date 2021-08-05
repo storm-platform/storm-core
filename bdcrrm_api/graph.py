@@ -1,5 +1,5 @@
 #
-# This file is part of Brazil Data Cube Reproducible Research Management CLI.
+# This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
 # Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
@@ -11,7 +11,7 @@
 import copy
 import itertools
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from dictdiffer import diff
 from igraph import Graph, VertexSeq, plot
@@ -292,7 +292,7 @@ class ExecutionGraphManager(object):
 
 def plot_execution_graph(graph_manager: ExecutionGraphManager, filename: str,
                          status_colors: Dict[str, str] = GraphStyleConfig.GRAPH_DEFAULT_VERTICES_COLOR,
-                         **kwargs) -> None:
+                         **kwargs) -> Union[str, None]:
     """Plot the execution graph.
 
     Args:
@@ -311,11 +311,14 @@ def plot_execution_graph(graph_manager: ExecutionGraphManager, filename: str,
         **kwargs (dict): A dict with extra the plot arguments.
 
     Returns:
-        None: The graph is saved on the `filename`.
+        Union[None, str]: if saved, returns the `filename` where plot is saved. Otherwise, returns None.
 
     See:
         https://igraph.org/python/doc/api/igraph.drawing.html#plot
     """
+    if graph_manager.is_empty:
+        return None
+
     _graph = graph_manager.graph
 
     # define label as status
@@ -325,7 +328,6 @@ def plot_execution_graph(graph_manager: ExecutionGraphManager, filename: str,
     visual_style = {
         "bbox": (400, 400),
         "margin": 27,
-        "vertex_color": "white",
         "vertex_size": 45,
         "vertex_label_size": 22,
         "edge_curved": False,
@@ -343,6 +345,8 @@ def plot_execution_graph(graph_manager: ExecutionGraphManager, filename: str,
 
     # Plot the graph
     plot(_graph, filename, **visual_style)
+
+    return filename
 
 
 __all__ = (
