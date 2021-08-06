@@ -136,7 +136,9 @@ def project_show(graph: bool):
     aesthetic_print(f"[bold]Name[/bold]:\n\t {currently_project.metadata.name}", 0)
     aesthetic_print(f"[bold]Description[/bold]:\n\t {currently_project.metadata.description}", 0)
 
-    aesthetic_print(f"[bold]Author[/bold]:\n\t {currently_project.metadata.author}", 0)
+    aesthetic_print(
+        f"[bold]Author[/bold]:\n\t {currently_project.metadata.author} ({currently_project.metadata.author_email})", 0
+    )
     aesthetic_print(f"[bold]Created at[/bold]:\n\t {currently_project.metadata.creation}", 0)
 
     if graph:

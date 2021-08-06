@@ -28,6 +28,8 @@ class ProjectMetadata(Object):
     licenses = Attribute(type=ProjectLicenses)
 
     author = Attribute(type=str)
+    author_email = Attribute(type=str)
+
     creation = Attribute(type=ruamel.yaml.timestamp.TimeStamp)
 
 
