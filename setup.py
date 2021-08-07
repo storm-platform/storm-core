@@ -1,8 +1,8 @@
 #
-# This file is part of Brazil Data Cube Reproducible Research Management CLI.
+# This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
+# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
@@ -37,14 +37,20 @@ examples_require = [
 ]
 
 visual_require = [
-    'asciidag>=0.2.0'
+    'asciidag>=0.2.0',
+    'cairocffi>=1.2.0'
+]
+
+docker_unpacker = [
+    'reprounzip-docker>=1.1',
 ]
 
 extras_require = {
     'docs': docs_require,
     'examples': examples_require,
     'tests': tests_require,
-    'visual': visual_require
+    'visual': visual_require,
+    'docker-unpacker': docker_unpacker
 }
 
 extras_require['all'] = [req for _, reqs in extras_require.items() for req in reqs]
@@ -61,14 +67,14 @@ install_requires = [
     'reprozip>=1.1',
     'rpaths>=1.0.0',
     'reprounzip>=1.1',
-    'reprounzip-docker>=1.1',
-    'pandas>=1.3.0',
     'bagit>=1.8.1',
     'yamlize>=0.7.0',
     'cookiecutter>=1.7.3',
     'plumbum>=1.7.0',
     'ruamel.yaml>=0.17.10',
-    'cairocffi>=1.2.0'
+    'rich>=10.7.0',
+    'pandas>=1.3.1',
+    'paradag>=1.2.0'
 ]
 
 packages = find_packages()
@@ -88,11 +94,11 @@ setup(
     license='MIT',
     author='Brazil Data Cube Team',
     author_email='brazildatacube@inpe.br',
-    url='https://github.com/brazil-data-cube/bdcrrm-cli',
+    url='https://github.com/brazil-data-cube/bdcrrm-api',
     project_urls={
-        'Repository': 'https://github.com/brazil-data-cube/bdcrrm-cli',
-        'Issues': 'https://github.com/brazil-data-cube/bdcrrm-cli/issues',
-        'Documentation': 'https://bdcrrm_cli.readthedocs.io/en/latest/'
+        'Repository': 'https://github.com/brazil-data-cube/bdcrrm-api',
+        'Issues': 'https://github.com/brazil-data-cube/bdcrrm-api/issues',
+        'Documentation': 'https://bdcrrm_api.readthedocs.io/en/latest/'
     },
     packages=packages,
     zip_safe=False,
@@ -100,7 +106,7 @@ setup(
     platforms='any',
     entry_points={
         'console_scripts': [
-            'bdcrrm-cli = bdcrrm_api.cli.cli:cli'
+            'bdcrrm-cli = bdcrrm_api.cli.cli:bdcrrm_cli'
         ]
     },
     extras_require=extras_require,

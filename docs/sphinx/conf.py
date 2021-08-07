@@ -14,7 +14,7 @@ more about the options to be used for configuration, please, see:
 - https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
-import bdcrrm_cli
+import bdcrrm_api
 import sphinx_rtd_theme
 
 
@@ -23,7 +23,7 @@ import sphinx_rtd_theme
 project = 'BDCRRM_CLI'
 copyright = '2021, INPE.'
 author = 'Brazil Data Cube Team'
-release = bdcrrm_cli.__version__
+release = bdcrrm_api.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -61,7 +61,7 @@ exclude_patterns = [
 html_theme = 'sphinx_rtd_theme'
 
 html_theme_options = {
-    'canonical_url': 'https://brazil-data-cube.github.io/',
+    'html_baseurl': 'https://brazil-data-cube.github.io/',
     'analytics_id': 'XXXXXXXXXX',
     'logo_only': False,
     'display_version': True,
@@ -81,12 +81,12 @@ html_theme_options = {
 
 #html_style = ''
 
-html_title = 'BDCRRM_CLI'
+html_title = 'BDCRRM_API'
 
 html_context = {
     'display_github': False,
     'github_user': 'brazil-data-cube',
-    'github_repo': 'bdcrrm-cli',
+    'github_repo': 'bdcrrm-api',
     'last_updated': False,
     #'commit': False,
 }

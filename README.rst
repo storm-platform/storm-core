@@ -1,8 +1,8 @@
 ..
-    This file is part of Brazil Data Cube Reproducible Research Management CLI.
+    This file is part of Brazil Data Cube Reproducible Research Management API.
     Copyright (C) 2021 INPE.
 
-    Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
+    Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
     under the terms of the MIT License; see LICENSE file for more details.
 
 
@@ -50,9 +50,33 @@ Brazil Data Cube Reproducible Research Management API
         :target: https://discord.com/channels/689541907621085198#
         :alt: Join us at Discord
 
-
 About
 =====
 
+bdcrrm-api is a tool designed to facilitate the creation, management and reproduction of scientific experiments.
 
-API to create, manage and reproduce scientific analyses
+Installation
+============
+
+See `INSTALL.rst <./INSTALL.rst>`_.
+
+
+Using bdcrrm-api in the Command Line
+=====================================
+
+See `CLI.rst <./CLI.rst>`_.
+
+
+Developer Documentation
+=======================
+
+Comming soon.
+
+License
+=======
+
+.. admonition::
+    Copyright (C) 2021 INPE.
+
+    Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
+    under the terms of the MIT License; see LICENSE file for more details.

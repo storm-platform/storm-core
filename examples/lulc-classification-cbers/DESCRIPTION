@@ -1,0 +1,14 @@
+Package: lulc-classification
+Title: lulc-classification
+Version: 0.1.0
+Authors@R:
+    person(given = "Felipe Menino",
+           role = c("aut", "cre"),
+           email = "felipe.carlos@inpe.br")
+Description: Reproducible Land Use and Land Cover classification using the SITS analytical package.
+License: MIT + file LICENSE
+ByteCompile: true
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1

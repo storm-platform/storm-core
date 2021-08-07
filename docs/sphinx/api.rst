@@ -10,4 +10,4 @@ BDCRRM_CLI API
 ==============
 
 
-.. automodule:: bdcrrm_cli.bdcrrm_cli
+.. automodule:: bdcrrm_api

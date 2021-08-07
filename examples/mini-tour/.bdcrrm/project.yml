@@ -1,7 +1,7 @@
 metadata:
-  name: bdcrrm-lulc-classification
-  
-  description: Reproducible data analysis project created with bdcrrm-cli.
+  name: cook
+
+  description: Example of reproducible project using Python programming language and bdcrrm-api.
 
   licenses:
     code: MIT
@@ -9,8 +9,9 @@ metadata:
     text: MIT
 
   author: Felipe Menino
+  author_email: felipe.carlos@inpe.br
 
-  creation: 2021-07-18T20:42:47.422838
+  creation: 2021-08-04T00:06:40.747788
 
 config:
   working_directories:
@@ -20,3 +21,6 @@ config:
     foo:
       pattern: /foo/*
       action: include # or exclude
+
+secrets:
+  - MySecret

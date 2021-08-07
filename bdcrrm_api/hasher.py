@@ -1,8 +1,8 @@
 #
-# This file is part of Brazil Data Cube Reproducible Research Management CLI.
+# This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
+# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
@@ -39,6 +39,9 @@ def checksum_file(file_path: Union[str, Path], chunk_size=16384) -> bytes:
 
     Raises:
         IOError when could not open given file.
+
+    Note:
+        This code is adapted from: https://github.com/brazil-data-cube/bdc-catalog
     """
     algorithm = hashlib.sha256()
 
@@ -61,10 +64,13 @@ def multihash_checksum_sha256(data: Union[str, list, Path]):
     See more in https://github.com/multiformats/py-multihash/blob/master/multihash/constants.py#L4
 
     Args:
-        file_path (str|Path): Path to the file
+        data Union[str, list, Path]: Path to the file
 
     Returns:
         A string-like hash in hex-decimal
+
+    Note:
+        This code is adapted from: https://github.com/brazil-data-cube/bdc-catalog
     """
     sha256 = 0x12
     sha256_length = 0x20
