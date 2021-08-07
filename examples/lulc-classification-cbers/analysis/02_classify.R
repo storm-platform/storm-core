@@ -4,7 +4,7 @@ library(sits)
 #
 # General definitions
 #
-classification_memsize    <- 16 # in GB
+classification_memsize    <- 8 # in GB
 classification_multicores <- 8
 
 start_date  <- "2018-09-14"
@@ -14,13 +14,13 @@ end_date    <- "2019-07-28"
 collection  <- "CB4_64_16D_STK-1"
 
 # define the roi and load samples file
-roi     <- readRDS(url("https://brazildatacube.dpi.inpe.br/geo-knowledge-hub/bdc-article/roi/roi.rds"))
-samples <- readRDS("bdc-article/training-samples/CB4_64_16D_STK_1.rds")
+roi     <- readRDS("data/raw_data/roi.rds")
+samples <- readRDS("data/derived_data/CB4_64_16D_STK_1.rds")
 
 #
 # Output directory
 #
-output_dir <- paste0("bdc-article", "/results", "/CB4_64_16D_STK_1")
+output_dir <- paste("data", "derived_data", sep = "/")
 
 dir.create(
   path         = output_dir,
@@ -34,11 +34,10 @@ dir.create(
 cube <- sits_cube(
   source      = "BDC",
   name        = "cube_to_classify",
-  url         = "https://brazildatacube.dpi.inpe.br/stac/",
   collection  = collection,
   start_date  = start_date,
   end_date    = end_date,
-  tiles       = c("022024")
+  tiles       = "022024"
 )
 
 #
