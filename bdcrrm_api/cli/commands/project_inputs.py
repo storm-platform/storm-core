@@ -2,7 +2,7 @@
 # This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
+# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
@@ -12,9 +12,9 @@ import json
 
 import click
 
-from .utils import load_currently_files
 from ..graphics import aesthetic_print
 from ..graphics.tables import table_simple
+from .utils import load_currently_files
 
 
 @click.group(name="inputs")
@@ -33,7 +33,7 @@ def inputs(ctx):
                    "execution of the project's experiments.")
 @click.pass_obj
 def inputs_list(obj, with_checksum: bool):
-    """Lists the inputs that are required to be defined to reproduce this project."""
+    """List the inputs that are required to be defined to reproduce this project."""
     aesthetic_print("[bold cyan]bdcrrm-cli[/bold cyan]: Project inputs", 1)
 
     files_obj = obj.get("files", None)

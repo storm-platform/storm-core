@@ -2,7 +2,7 @@
 # This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
+# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
@@ -15,7 +15,7 @@ from igraph import Graph
 
 from ...config import EnvironmentConfig, ProjectConfig
 from ...engine import ExecutionEngine
-from ...project import Project, load_project, dump_project
+from ...project import Project, dump_project, load_project
 
 
 def get_project_file() -> str:
@@ -66,7 +66,6 @@ def load_currently_graph() -> Graph:
 
 def load_currently_files() -> Dict:
     """Load the files that have been removed from the ReproZip package and are required to reproduce the experiment."""
-
     from ...persistence import FilesPersistencePickle
     return FilesPersistencePickle.load_files(os.path.join(os.getcwd(), EnvironmentConfig.REPROPACK_BASE_PATH))
 

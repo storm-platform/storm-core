@@ -2,7 +2,7 @@
 # This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
+# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
@@ -228,7 +228,7 @@ def _extract_command(reprozip_execution_config: Dict) -> List[str]:
 
 
 def _remove_command_from_input(command: List[str], input_files: List[str]) -> List[str]:
-    """Removes the executed script from the variables considered as input.
+    """Remove the executed script from the variables considered as input.
 
     Args:
         command (List[str]): The execution command.
@@ -324,7 +324,6 @@ def reprozip_execution_metadata(repropack_directory: str, working_directories: L
             - `inputs`: The execution input files;
             - `outputs`: The execution output files;
     """
-
     # ToDo: Maybe this filter function is temporary. In the future, the complete object will be used.
     def _extract_path(input_output_config: List[Dict]) -> List[str]:
         """Extract only `path` key from input/output ReproZip directory.
@@ -480,7 +479,7 @@ def reprounzip_add_environment_variables(repropack_directory: str, environment_v
 
 
 def reprounzip_setup(repropack_path: str, reproduction_path: str, unpacker: str = "docker"):
-    """Setup the directories and data needed to run an experiment through Reprounip.
+    """Configure the directories and data needed to run an experiment through Reprounip.
 
     Args:
         repropack_path (str): Path to the `.rpz` file.

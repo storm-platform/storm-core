@@ -2,7 +2,7 @@
 # This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
+# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
@@ -16,11 +16,14 @@ from typing import Dict, List
 
 from .config import EnvironmentConfig, ExecutionEngineConfig
 from .graph import ExecutionGraphManager, VertexStatus
-from .persistence import GraphPersistencePickle, FilesPersistencePickle
-from .reprozip import (reprozip_execute_script, reprozip_execution_metadata,
-                       reprozip_pack_execution, filter_reprozip_config_files,
-                       reprounzip_setup, reprounzip_upload, reprounzip_run, reprounzip_download_all,
-                       reprozip_remove_environment_variables, reprounzip_add_environment_variables)
+from .persistence import FilesPersistencePickle, GraphPersistencePickle
+from .reprozip import (filter_reprozip_config_files,
+                       reprounzip_add_environment_variables,
+                       reprounzip_download_all, reprounzip_run,
+                       reprounzip_setup, reprounzip_upload,
+                       reprozip_execute_script, reprozip_execution_metadata,
+                       reprozip_pack_execution,
+                       reprozip_remove_environment_variables)
 
 
 class ExecutionEngine(object):
@@ -192,7 +195,7 @@ class ExecutionEngine(object):
     def _reproduce_operator(self, vertex, previous_output_files: List[str] = [],
                             missing_inputs_to_upload: Dict = {},
                             missing_environment_variables: List[str] = []) -> List[str]:
-        """Base operation for experiment reproduction.
+        """Execute the operations for experiment reproduction.
 
         Args:
             vertex (igraph.Vertex): Vertex that should be executed.

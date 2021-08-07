@@ -2,7 +2,7 @@
 # This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
+# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
@@ -13,8 +13,8 @@ import json
 import click
 import rich.markdown
 
-from .utils import (load_currently_project, load_currently_execution_engine)
 from ..graphics import aesthetic_print
+from .utils import load_currently_execution_engine, load_currently_project
 
 
 @click.group(name="reproduction")

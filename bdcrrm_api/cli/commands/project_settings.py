@@ -2,7 +2,7 @@
 # This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
+# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
@@ -12,10 +12,10 @@ import os
 
 import click
 
-from .utils import load_currently_project, save_currently_project
 from ..graphics import aesthetic_print
 from ..graphics.tables import table_simple
 from ..graphics.trees import tree_one_root_with_children
+from .utils import load_currently_project, save_currently_project
 
 
 @click.group(name="settings")
@@ -107,8 +107,7 @@ def settings_working_directories():
     be considered `working directories`. Once defined, `bdcrrm-api` will interpret the other `working directories`
     as valid.
 
-    Note
-
+    Note:
         When you use directories other than the project directory to store your input and output data, these
         extra directories must be added to the project. Otherwise, `bdcrrm-api` will not consider them as valid input.
     """
@@ -189,8 +188,7 @@ def settings_datasources():
     Sometimes the data used may be in other directories. In order for these to be included in the package,
     it is necessary to add them as `data sources` for the project.
 
-    Note
-
+    Note:
         Unlike a `working directory`, which is used to determine the inputs/outputs, the `data sources`
         are used to determine which data will be inserted into the replay package, and do not influence
         the definition of the inputs/outputs of the runtime graph.
@@ -308,9 +306,7 @@ def settings_secrets():
     creating the reproducibility package, these environment variables are checked and removed.
 
     This mechanism helps ensure privacy and control of user data.
-
-    Note
-
+    Note:
         When a secret is set, it is assumed that the user that will be reproducing the experiment
         must set them again. For this purpose, facilities are provided in the
         `bdcrrm-cli project import` command, which saves the user from manually manipulating secret

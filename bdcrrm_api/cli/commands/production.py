@@ -2,7 +2,7 @@
 # This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
+# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
@@ -11,8 +11,9 @@
 import click
 import rich.markdown
 
-from .utils import (load_currently_project, load_currently_execution_engine, check_if_execution_command_is_valid)
 from ..graphics import aesthetic_print
+from .utils import (check_if_execution_command_is_valid,
+                    load_currently_execution_engine, load_currently_project)
 
 
 @click.group(name="production")
@@ -36,9 +37,10 @@ def production(ctx):
                                                                      "valid when no execution vertex is outdated.")
 @click.pass_obj
 def make(obj, command, no_check_graph: bool):
-    """Execute an arbitrary command in a reproducible way. When the execution is done by the `bdcrrm-api`, all
-    computational components used on the execution will be registered transparently. With this, after the execution
-    the experiment can be reproduced without many efforts.
+    """Execute an arbitrary command in a reproducible way.
+
+    When the execution is done by the `bdcrrm-api`, all computational components used on the execution will be
+    registered transparently. With this, after the execution the experiment can be reproduced without many efforts.
 
     For example, if you want to run a python script and then play it back, you can use bdcrrm-api to help you.
     To do this, the execution that is normally done like this:

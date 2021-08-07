@@ -2,7 +2,7 @@
 # This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
+# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
@@ -12,13 +12,13 @@ import click
 import rich
 import rich.markdown
 
+from ...config import EnvironmentConfig
+from ..graphics import aesthetic_print
+from ..graphics.graph import show_ascii_execution_graph
 from .project_graph import graph
 from .project_inputs import inputs
 from .project_settings import settings
-from .utils import load_currently_project, load_currently_execution_engine
-from ..graphics import aesthetic_print
-from ..graphics.graph import show_ascii_execution_graph
-from ...config import EnvironmentConfig
+from .utils import load_currently_execution_engine, load_currently_project
 
 TEMPLATE_REPOSITORY = "https://github.com/M3nin0/bdcrrm-project-cookiecutter"
 

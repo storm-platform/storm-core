@@ -2,7 +2,7 @@
 # This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
+# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
@@ -62,22 +62,22 @@ class ExecutionGraphManager(object):
 
     @property
     def is_outdated(self) -> bool:
-        """Returns a flag indicating whether or not there are `outdated` vertices."""
+        """Return a flag indicating whether or not there are `outdated` vertices."""
         return len(self._graph.vs.select(status=VertexStatus.Outdated)) > 0 if self._graph else False
 
     @property
     def is_empty(self) -> bool:
-        """Returns a flag indicating if the graph is empty (no vertices)."""
+        """Return a flag indicating if the graph is empty (no vertices)."""
         return len(self._graph.vs) == 0
 
     @property
     def inputs(self) -> List:
-        """Returns vertices inputs."""
+        """Return vertices inputs."""
         return list(itertools.chain(*self._graph.vs["inputs"])) if not self.is_empty else []
 
     @property
     def outputs(self) -> List:
-        """Returns vertices outputs."""
+        """Return vertices outputs."""
         return list(itertools.chain(*self._graph.vs["outputs"])) if not self.is_empty else []
 
     def to_frame(self, dim="vertex") -> "pandas.core.frame.DataFrame":

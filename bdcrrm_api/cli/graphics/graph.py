@@ -2,13 +2,13 @@
 # This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
+# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
 """Brazil Data Cube Reproducible Research Command-Line Interface Graph Graphics."""
 
-from typing import Union, List, Tuple
+from typing import List, Tuple, Union
 
 import click
 from igraph import Graph
@@ -24,7 +24,6 @@ def _ascii_dag(graph: Graph) -> Union[None, 'AsciiGraph']:
         Union[None, AsciiGraph]: If the graph is displayed, the created graph instance is returned. Otherwise,
         None will be returned.
     """
-
     from asciidag.graph import Graph as AsciiGraph
     from asciidag.node import Node
 
@@ -69,7 +68,7 @@ def _ascii_dag(graph: Graph) -> Union[None, 'AsciiGraph']:
 
 
 def show_ascii_execution_graph(graph: Graph):
-    """Displays the project execution graph on the terminal.
+    """Display the project execution graph on the terminal.
 
     Args:
         graph (Graph): Project graph instance.

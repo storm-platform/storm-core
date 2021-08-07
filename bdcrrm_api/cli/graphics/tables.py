@@ -2,7 +2,7 @@
 # This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
+# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
@@ -12,9 +12,9 @@ from typing import List, Tuple
 
 from rich.table import Table
 
-from . import aesthetic_print
 from ...config import GraphStyleConfig
 from ...graph import VertexStatus
+from . import aesthetic_print
 
 
 def table_simple(title: str, columns: List[str], rows: List[Tuple]) -> Table:
@@ -50,7 +50,6 @@ def show_table_execution_graph_status(graph_df: 'pandas.core.frame.DataFrame'):
     Returns:
         None: The table will be printed on the terminal.
     """
-
     # defining icons for each status (the current available status is: `updated` and `outdated`)
     emojis = {
         VertexStatus.Updated: ":heavy_check_mark:",

@@ -2,7 +2,7 @@
 # This file is part of Brazil Data Cube Reproducible Research Management API.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
+# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
@@ -12,19 +12,21 @@ from abc import ABC, abstractmethod
 from typing import Callable
 
 from igraph import Graph
-from paradag import DAG, dag_run, MultiThreadProcessor, SequentialProcessor
+from paradag import DAG, MultiThreadProcessor, SequentialProcessor, dag_run
 
 
 class TopologicalExecutor(ABC):
-    """Interface for determining the format of a TopologicalExecutor. The implementations
-       of this class are responsible for providing functionalities that allow the execution of
-       tasks represented in directed acyclic graphs.
+    """Interface for determining the format of a TopologicalExecutor.
+
+    The implementations of this class are responsible for providing functionalities
+    that allow the execution of tasks represented in directed acyclic graphs.
     """
 
     @staticmethod
     @abstractmethod
     def make(fnc: Callable, graph: Graph, **kwargs):
-        """Execute a ExecutionGraph
+        """Execute a ExecutionGraph.
+
         Args:
             fnc (Callable): Function used to execute the graph vertices.
 
@@ -53,13 +55,14 @@ class ReproStandardExecutor:
     """
 
     def __init__(self, fnc: Callable, graph: Graph, **kwargs):
-        """
-            Args:
-                fnc (Callable): Function used to process the graph vertices.
+        """Class initializer.
 
-                graph (igraph.Graph): Execution graph with all steps that will be processed.
+        Args:
+            fnc (Callable): Function used to process the graph vertices.
 
-                kwargs (dict): Extra parameters for the `fnc`.
+            graph (igraph.Graph): Execution graph with all steps that will be processed.
+
+            kwargs (dict): Extra parameters for the `fnc`.
         """
         self._fnc = fnc
         self._graph = graph
@@ -76,14 +79,16 @@ class ReproStandardExecutor:
         return self._fnc(param, self.__level, **self._extra_options)
 
     def deliver(self, _, result):
-        """Deliver results to descendants vertices"""
+        """Deliver results to descendants vertices."""
         self.__level.extend(result)
 
 
 class ReproParaDAGParallelTopologicalExecutor(TopologicalExecutor):
+    """TopologicalExecutor implementation."""
 
     @staticmethod
     def make(fnc, graph: Graph, **kwargs):
+        """Make the execution graph run."""
         processor = kwargs.get("processor_options", {})
 
         # creating the base execution graph
