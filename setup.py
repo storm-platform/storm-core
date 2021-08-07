@@ -71,7 +71,10 @@ install_requires = [
     'yamlize>=0.7.0',
     'cookiecutter>=1.7.3',
     'plumbum>=1.7.0',
-    'ruamel.yaml>=0.17.10'
+    'ruamel.yaml>=0.17.10',
+    'rich>=10.7.0',
+    'pandas>=1.3.1',
+    'paradag>=1.2.0'
 ]
 
 packages = find_packages()
