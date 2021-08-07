@@ -73,12 +73,11 @@ class ReproStandardExecutor:
 
     def execute(self, param):
         """Execute a vertex."""
-        self._fnc(param, self.__level, **self._extra_options)
+        return self._fnc(param, self.__level, **self._extra_options)
 
     def deliver(self, _, result):
         """Deliver results to descendants vertices"""
-        if result:
-            self.__level.extend(result)
+        self.__level.extend(result)
 
 
 class ReproParaDAGParallelTopologicalExecutor(TopologicalExecutor):

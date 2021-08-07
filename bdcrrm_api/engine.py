@@ -249,6 +249,8 @@ class ExecutionEngine(object):
             vertex_input_files = (
                 list(filter(lambda x: os.path.basename(x) in vertex_input_files, previous_output_files))
             )
+        else:
+            previous_output_files = []
 
         # upload the required inputs
         vertex_input_files_to_upload = vertex_input_files + vertex_inputs_to_define_files
@@ -266,7 +268,14 @@ class ExecutionEngine(object):
         os.makedirs(download_files_path, exist_ok=True)
 
         os.chdir(download_files_path)
-        reprounzip_download_all(experiment_reproduction_path)
+        try:
+            reprounzip_download_all(experiment_reproduction_path)
+        except:
+            # The command can return status != 0 when temporary files are
+            # used and were not found in the download. For now no treatment will be applied.
+            # If the command has problems with different tests, the next step
+            # will return errors, stopping execution of the command.
+            pass
 
         # find output files from current directory
         previous_output_files.extend([os.path.join(download_files_path, file) for file in os.listdir()])
@@ -275,7 +284,7 @@ class ExecutionEngine(object):
         os.chdir(current_directory)
         shutil.rmtree(experiment_reproduction_path)
 
-        return missing_environment_variables
+        return previous_output_files
 
     def reproduce(self, missing_inputs_to_upload: Dict = None, missing_environment_variables: List[str] = None,
                   processors: int = 4, processor_mode: str = None) -> None:
