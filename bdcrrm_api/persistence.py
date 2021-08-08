@@ -17,7 +17,7 @@ from typing import Dict, Tuple, Union
 import bagit
 from igraph import Graph
 
-from .config import EnvironmentConfig, GraphPersistenceConfig, ProjectConfigig
+from .config import EnvironmentConfig, GraphPersistenceConfig, ProjectConfig
 from .hasher import multihash_checksum_sha256
 from .project import Project
 
