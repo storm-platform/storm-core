@@ -20,7 +20,7 @@ from .project_inputs import inputs
 from .project_settings import settings
 from .utils import load_currently_execution_engine, load_currently_project
 
-TEMPLATE_REPOSITORY = "https://github.com/M3nin0/bdcrrm-project-cookiecutter"
+TEMPLATE_REPOSITORY = "https://github.com/brazil-data-cube/bdcrrm-project-cookiecutter"
 
 
 @click.group(name="project")
