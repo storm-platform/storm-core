@@ -12,7 +12,7 @@ import copy
 import os
 import shutil
 from tempfile import mkdtemp
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from .config import EnvironmentConfig, ExecutionEngineConfig
 from .graph import ExecutionGraphManager, VertexStatus
@@ -146,11 +146,11 @@ class ExecutionEngine(object):
         # removing old execution files
         self._remove_unused_execution_files()
 
-    def execute(self, command: str, check_graph_status: bool = True) -> None:
+    def execute(self, command: Tuple[str], check_graph_status: bool = True) -> None:
         """Execute a User Defined Command with ReproZip Trace System.
 
         Args:
-            command (str): User Defined Command that will be executed and registered.
+            command (Tuple): User Defined Command that will be executed and registered.
 
             check_graph_status (bool): Flag to indicate whether it is necessary to validate the graph before
             execution. A graph is valid when all registered execution nodes have
@@ -164,7 +164,6 @@ class ExecutionEngine(object):
                                "it with the `remake` operation.")
 
         # prepare commands to execute
-        command = command.split()
         binary_command = command[0]
 
         # execute script with ReproZip

@@ -388,7 +388,7 @@ def reprozip_remove_environment_variables(repropack_directory: str, environment_
     _save_reprozip_config_file(repropack_directory, reprozip_execution_config)
 
 
-def reprozip_execute_script(reprofiles_directory: str, binary_command: str, arguments: List[str],
+def reprozip_execute_script(reprofiles_directory: str, binary_command: str, arguments: Tuple[str],
                             verbosity: str = "unset") -> str:
     """Execute a script using ReproZip engine.
 
@@ -397,7 +397,7 @@ def reprozip_execute_script(reprofiles_directory: str, binary_command: str, argu
 
         binary_command (str): The binary command to execute the script.
 
-        arguments (List[str]): The arguments to pass to the `binary_command`.
+        arguments (Tuple[str]): The arguments to pass to the `binary_command`.
 
         verbosity (str): The verbosity level to use.
 
