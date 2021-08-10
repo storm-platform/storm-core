@@ -31,7 +31,7 @@ def production(ctx):
 
 
 @production.command(name="make")
-@click.argument("command", required=False)
+@click.argument("command", required=True, nargs=-1)
 @click.option("--no-check-graph", required=False, is_flag=True, help="Flag to indicate that the validation of the "
                                                                      "graph should not be done. A graph is considered "
                                                                      "valid when no execution vertex is outdated.")
@@ -60,7 +60,7 @@ def make(obj, command, no_check_graph: bool):
     engine = obj["execution_engine"]
 
     try:
-        engine.execute(command, check_graph_status=not no_check_graph)
+        engine.execute(list(command), check_graph_status=not no_check_graph)
     except RuntimeError:
         aesthetic_print("[bold red]bdcrrm-cli[/bold red]: Problems founded")
         aesthetic_print(rich.markdown.Markdown("A new command cannot be executed, there are commands in the "

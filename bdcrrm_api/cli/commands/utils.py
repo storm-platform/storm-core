@@ -12,6 +12,7 @@ import os
 from typing import Dict
 
 from igraph import Graph
+from typing import Tuple
 
 from ...config import EnvironmentConfig, ProjectConfig
 from ...engine import ExecutionEngine
@@ -45,7 +46,7 @@ def check_if_project_is_valid():
         )
 
 
-def check_if_execution_command_is_valid(command: str):
+def check_if_execution_command_is_valid(command: Tuple[str]):
     """Check that the execution commands are valid.
 
     A command that is considered valid is one that has at least one associated binary
@@ -54,7 +55,7 @@ def check_if_execution_command_is_valid(command: str):
     Raises:
         ValueError: If the command is not valid
     """
-    if not command or not command.strip():
+    if not command or not " ".join(command).strip():
         raise ValueError("Invalid command!")
 
 
