@@ -53,7 +53,8 @@ export BDC_ACCESS_KEY=MY_KEY_VALUE
 > with the defined nomenclature, allowing the use of databases and web
 > services (e.g., STAC, WTSS, and AWS) that depend on a token or
 > user/password as environment variables without exposing credentials.
-> **Adding secrets**
+
+**Adding secrets**
 
 ``` shell
 bdcrrm project settings secrets add BDC_ACCESS_KEY

@@ -40,6 +40,7 @@ export BDC_ACCESS_KEY=MY_KEY_VALUE
 ```
 
 > Since `bdcrrm-api` saves all the operating system information being used, environment variables are also saved. To prevent environment variables with sensitive information such as the `BDC_ACCESS_KEY` variable from being shared improperly, `bdcrrm-api` introduced the concept of `secrets`. These filters remove all environment variables with the defined nomenclature, allowing the use of databases and web services (e.g., STAC, WTSS, and AWS) that depend on a token or user/password as environment variables without exposing credentials.
+
 **Adding secrets**
 
 ```shell
