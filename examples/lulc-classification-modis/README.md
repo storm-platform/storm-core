@@ -22,7 +22,9 @@ the state of Mato Grosso.
 The processing flow implemented in this example is illustrated in the
 Figure below:
 
+<center>
 <img src="./figures/example-modis-workflow.png" width="60%" style="display: block; margin: auto;" />
+</center>
 
 As illustrated in the flowchart above, initially, the time series
 extraction is performed. Next, the training of the Machine Learning

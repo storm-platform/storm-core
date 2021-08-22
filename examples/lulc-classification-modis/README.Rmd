@@ -23,9 +23,11 @@ In this example, the classification methodology presented in the article [Land u
 
 The processing flow implemented in this example is illustrated in the Figure below:
 
+<center>
 ```{r graph2, echo=FALSE, out.width="60%", fig.align='center'}
 knitr::include_graphics("./figures/example-modis-workflow.png")
 ```
+</center>
 
 As illustrated in the flowchart above, initially, the time series extraction is performed. Next, the training of the Machine Learning model, Support Vector Machine, is performed. Finally, after training the model, it is applied to 16 years of data individually.
 
