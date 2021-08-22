@@ -111,7 +111,7 @@ class ExecutionEngine(object):
             vertex = self._graph_manager.graph.vs[vertex_index]
 
             if vertex["status"] == VertexStatus.Outdated:
-                self.execute(vertex["command"], check_graph_status=False)
+                self.execute(vertex["command"].split(" "), check_graph_status=False)
 
     def delete_execution(self, command: str, include_neighbors: bool = True) -> None:
         """Delete a already registered execution.

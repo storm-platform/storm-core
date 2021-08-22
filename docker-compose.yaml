@@ -1,0 +1,42 @@
+#
+# This file is part of Brazil Data Cube Reproducible Research Management API.
+# Copyright (C) 2021 INPE.
+#
+# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
+# under the terms of the MIT License; see LICENSE file for more details.
+#
+
+version: "3.2"
+
+services:
+    base:
+        build:
+            context: .
+            dockerfile: docker/Dockerfile.base
+        image: brazildatacube/bdcrrm-api:base-0.1
+        container_name: bdcrrm-api-base
+        volumes:
+            -   type: bind
+                source: /var/run/docker.sock
+                target: /var/run/docker.sock
+        tty: true
+        stdin_open: true
+        entrypoint: "/bin/bash"
+        env_file:
+            - .env
+
+    jupyterlab:
+        user: ${UID}:${GID}
+        build:
+            context: .
+            dockerfile: docker/Dockerfile.jupyter
+        image: brazildatacube/bdcrrm-api:jupyter-0.1
+        container_name: bdcrrm-api-jupyter
+        volumes:
+            -   type: bind
+                source: /var/run/docker.sock
+                target: /var/run/docker.sock
+        ports:
+            - "8888:8888"
+        env_file:
+            - .env

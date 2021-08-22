@@ -49,7 +49,7 @@ def make(obj, command, no_check_graph: bool):
 
     should look like this:
 
-       $ bdcrrm-api production make "python3 myscript.py"
+       $ bdcrrm-api production make python3 myscript.py
 
     The main difference here is that now, the execution is controlled by `bdccrm-api`, which allows you to extract
     information from the execution and save all the elements needed to re-run the project.
