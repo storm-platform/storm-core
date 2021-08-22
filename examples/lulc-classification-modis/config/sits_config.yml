@@ -1,0 +1,50 @@
+sources:
+    BDC                     :
+        s3_class            : ["bdc_cube", "stac_cube", "raster_cube"]
+        service             : "STAC"
+        url                 : "https://brazildatacube.dpi.inpe.br/stac/"
+        collections         :
+            MOD13Q1-6       : &bdc_mod
+                bands       :
+                    NDVI              : &bdc_modis_ndvi
+                        missing_value : -3000
+                        minimum_value : -2000
+                        maximum_value : 10000
+                        scale_factor  : 0.0001
+                        offset_value  : 0
+                        resampling    : "bilinear"
+                        resolutions   : [231.656]
+                        band_name     : "NDVI"
+                    EVI     :
+                        <<: *bdc_modis_ndvi
+                        band_name     : "EVI"
+                    BLUE    : &bdc_modis_blue
+                        missing_value : -1000
+                        minimum_value : 0
+                        maximum_value : 10000
+                        scale_factor  : 0.0001
+                        offset_value  : 0
+                        resampling    : "bilinear"
+                        resolutions   : [231.656]
+                        band_name     : "blue_reflectance"
+                    RED     :
+                        <<: *bdc_modis_blue
+                        band_name     : "red_reflectance"
+                    NIR     :
+                        <<: *bdc_modis_blue
+                        band_name     : "NIR_reflectance"
+                    MIR     :
+                        <<: *bdc_modis_blue
+                        band_name     : "MIR_reflectance"
+                    CLOUD   : &bdc_modis_cloud
+                        bit_mask      : FALSE
+                        band_name     : "pixel_reliability"
+                        values        :
+                            0         : "Use with confidence"
+                            1         : "Useful, but look at other QA information"
+                            2         : "Target covered with snow/ice"
+                            3         : "Target not visible, covered with cloud"
+                            255       : "Fill/No Data-Not Processed"
+                        interp_values : [2, 3, 255]
+                        resampling    : "ngb"
+                        resolutions   : [231.656]
