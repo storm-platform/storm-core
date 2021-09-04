@@ -19,11 +19,11 @@ from .graph import ExecutionGraphManager, VertexStatus
 from .persistence import FilesPersistencePickle, GraphPersistencePickle
 from .reprozip import (filter_reprozip_config_files,
                        reprounzip_add_environment_variables,
-                       reprounzip_download_all, reprounzip_run,
+                       reprounzip_run,
                        reprounzip_setup, reprounzip_upload,
                        reprozip_execute_script, reprozip_execution_metadata,
                        reprozip_pack_execution,
-                       reprozip_remove_environment_variables)
+                       reprozip_remove_environment_variables, reprozip_get_output_files, reprounzip_download_file)
 
 
 class ExecutionEngine(object):
@@ -266,24 +266,27 @@ class ExecutionEngine(object):
         reprounzip_run(experiment_reproduction_path)
 
         # download the results
-        download_files_path = os.path.join(EnvironmentConfig.REPROPACK_RESULT_PATH, f"step_{vertex.index}")
+        download_files_path = os.path.join(current_directory, EnvironmentConfig.REPROPACK_RESULT_PATH,
+                                           f"step_{vertex.index}")
         os.makedirs(download_files_path, exist_ok=True)
 
-        os.chdir(download_files_path)
-        try:
-            reprounzip_download_all(experiment_reproduction_path)
-        except:
-            # The command can return status != 0 when temporary files are
-            # used and were not found in the download. For now no treatment will be applied.
-            # If the command has problems with different tests, the next step
-            # will return errors, stopping execution of the command.
-            pass
+        # downloading experiment result
+        experiment_output_files = reprozip_get_output_files(experiment_reproduction_path)
+
+        for experiment_output_file in experiment_output_files:
+            try:
+                reprounzip_download_file(experiment_reproduction_path, experiment_output_file, download_files_path)
+            except:
+                # The command can return status != 0 when temporary files are
+                # used and were not found in the download. For now no treatment will be applied.
+                # If the command has problems with different tests, the next step
+                # will return errors, stopping execution of the command.
+                pass
 
         # find output files from current directory
-        previous_output_files.extend([os.path.join(download_files_path, file) for file in os.listdir()])
+        previous_output_files.extend([os.path.join(download_files_path, file) for file in experiment_output_files])
 
-        # return to experiment directory
-        os.chdir(current_directory)
+        # remove temporary reproduction directory
         shutil.rmtree(experiment_reproduction_path)
 
         return previous_output_files

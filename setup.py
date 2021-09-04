@@ -38,7 +38,8 @@ examples_require = [
 
 visual_require = [
     'asciidag>=0.2.0',
-    'cairocffi>=1.2.0'
+    'cairocffi>=1.2.0',
+    'rich>=10.7.0'
 ]
 
 docker_unpacker = [
@@ -64,17 +65,17 @@ install_requires = [
     'dictdiffer>=0.8.1',
     'py-multihash>=2.0.1',
     'python-igraph>=0.9.6',
-    'reprozip>=1.1',
     'rpaths>=1.0.0',
+    'reprozip>=1.1',
     'reprounzip>=1.1',
     'bagit>=1.8.1',
     'yamlize>=0.7.0',
     'cookiecutter>=1.7.3',
     'plumbum>=1.7.0',
     'ruamel.yaml>=0.17.10',
-    'rich>=10.7.0',
+    'docker>=5.0.0',
     'pandas>=1.3.1',
-    'paradag>=1.2.0'
+    'paradag>=1.2.0',
 ]
 
 packages = find_packages()
