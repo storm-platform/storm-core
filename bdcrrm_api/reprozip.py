@@ -11,16 +11,21 @@
 import fnmatch
 import os
 import uuid
+import shutil
+from tempfile import mkdtemp
 from typing import Dict, List, Tuple
 
 import plumbum
 from reprounzip.common import RPZPack
+from reprounzip.common import load_config as load_config_file
 from reprozip.pack import pack
 from reprozip.tracer import trace
 from rpaths import Path
 from ruamel.yaml import YAML
+from reprounzip.utils import iteritems
 
 from .config import EnvironmentConfig
+from .environment import run_container, export_container, remove_image, import_image_from_tarfile
 
 
 def _generate_uuid() -> str:
@@ -241,6 +246,26 @@ def _remove_command_from_input(command: List[str], input_files: List[str]) -> Li
     return [x for x in input_files if all(os.path.basename(x) not in c for c in command)]
 
 
+def _check_empty_environment_variable(repropack_directory: str) -> None:
+    """Check for empty environment variables on reprozip experiment configuration.
+
+    Args:
+        repropack_directory: The directory where the ReproZip execution files is saved.
+
+    Raises:
+        RuntimeError: When on the reprozip configuration file a environment variable is empty.
+    """
+    reprozip_execution_config = _load_reprozip_config_file(repropack_directory)
+    for idx, run in enumerate(reprozip_execution_config["runs"]):
+
+        run_environment_variables = reprozip_execution_config["runs"][idx]["environ"]
+
+        for environment_variable in run_environment_variables.keys():
+            if reprozip_execution_config["runs"][idx]["environ"][environment_variable] is None:
+                raise RuntimeError("The configuration file has environment variables that have not been declared! "
+                                   "Check the secrets file before continuing")
+
+
 def filter_reprozip_config_files(repropack_directory: str, datasources: dict,
                                  already_generated_files: List[str]) -> Dict[str, List]:
     """Delete configuration file contents from the execution performed by ReproZip.
@@ -324,6 +349,7 @@ def reprozip_execution_metadata(repropack_directory: str, working_directories: L
             - `inputs`: The execution input files;
             - `outputs`: The execution output files;
     """
+
     # ToDo: Maybe this filter function is temporary. In the future, the complete object will be used.
     def _extract_path(input_output_config: List[Dict]) -> List[str]:
         """Extract only `path` key from input/output ReproZip directory.
@@ -381,7 +407,7 @@ def reprozip_remove_environment_variables(repropack_directory: str, environment_
 
     # go through runs
     for idx, run in enumerate(reprozip_execution_config["runs"]):
-        for environment_variable in environment_variables:
+        for environment_variable in set(environment_variables):  # avoid None variables on config.yaml (#53)
             if environment_variable in run["environ"]:
                 reprozip_execution_config["runs"][idx]["environ"][environment_variable] = None
 
@@ -511,11 +537,60 @@ def reprounzip_upload(reproduction_path: str, source_file_path: str, target_file
     See:
         https://docs.reprozip.org/en/1.0.x/unpacking.html
     """
-    (
+    def _fs_layer_control(repropack_directory: str):
+        """Reduce the image layers to avoid reprozip problems.
+
+        Args:
+            repropack_directory (str): Path where the reprounzip experiment is stored.
+
+        Returns:
+            None: Image will be modified directly on docker daemon.
+        """
+        from reprounzip.unpackers.common.misc import metadata_read
+        reproduction_metadata = metadata_read(repropack_directory, "docker")
+
+        # removing layers and recreating the base image
+        image = reproduction_metadata["current_image"].decode("utf-8")
+
+        # creating a base container
+        container = run_container(
+            image=image,
+            auto_remove=True,
+            entrypoint="/busybox sh",
+            detach=True
+        )
+
+        # exporting only the container filesystem
+        container_fs_path = os.path.join(mkdtemp(), f"{image}.tar.gz")
+        export_container(container, container_fs_path)
+
+        # removing the original image
+        container.remove(force=True)
+        remove_image(image)
+
+        # creating the new image
+        import_image_from_tarfile(container_fs_path, image)
+        shutil.rmtree(container_fs_path)
+
+    # defining the upload callback
+    upload_fnc = (
         plumbum.cmd.reprounzip[
             unpacker, "upload", reproduction_path, f"{source_file_path}:{target_file_name}"
         ]
-    )()
+    )
+
+    try:
+        upload_fnc()
+    except:
+        # When an error occurs on upload, it is assumed that this problem
+        # is related to the Docker image layers used by the Reprozip.
+        #
+        # This is assumed since, up to this point, all steps are automated
+        # and are, in theory, trouble-free.
+        _fs_layer_control(reproduction_path)
+
+        # trying upload again
+        upload_fnc()
 
 
 def reprounzip_download_all(reproduction_path: str, unpacker: str = "docker"):
@@ -535,6 +610,30 @@ def reprounzip_download_all(reproduction_path: str, unpacker: str = "docker"):
     )()
 
 
+def reprounzip_download_file(reproduction_path: str, filename: str, output_directory: str, unpacker: str = "docker"):
+    """Download file from a reprozip experiment.
+
+    Args:
+        reproduction_path (str): Path where the reprounzip experiment is stored.
+
+        filename (str): File that will be downloaded from reprozip experiment
+
+        output_directory (str): Base directory where the file will be downloaded. Inside this directory, a file with
+        the same name of `filename` will be created.
+
+        unpacker (str): Reprounip unpacker.
+    See:
+        https://docs.reprozip.org/en/1.0.x/unpacking.html
+    """
+    output_file = os.path.join(output_directory, filename)
+
+    (
+        plumbum.cmd.reprounzip[
+            unpacker, "download", reproduction_path, f"{filename}:{output_file}"
+        ]
+    )()
+
+
 def reprounzip_run(reproduction_path: str, unpacker: str = "docker"):
     """Execute a reprounzip experiment.
 
@@ -545,11 +644,32 @@ def reprounzip_run(reproduction_path: str, unpacker: str = "docker"):
     See:
         https://docs.reprozip.org/en/1.0.x/unpacking.html
     """
+    _check_empty_environment_variable(reproduction_path)
+
     (
         plumbum.cmd.reprounzip[
             unpacker, "run", reproduction_path
         ]
     )()
+
+
+def reprozip_get_output_files(reproduction_path: str):
+    """Extract the output files that is generated on reprozip experiment.
+
+    Args:
+        reproduction_path (str): Path where the reprounzip experiment is stored.
+    See:
+        https://docs.reprozip.org/en/1.0.x/unpacking.html#managing-input-and-output-files
+    """
+    repropack = Path(reproduction_path)
+    repropack_config = load_config_file(repropack / "config.yml", canonical=True)
+
+    output_paths = []
+    for output_name, f in sorted(iteritems(repropack_config.inputs_outputs)):
+        if f.write_runs and f.write_runs:
+            output_paths.append(output_name)
+
+    return output_paths
 
 
 __all__ = (
@@ -563,6 +683,8 @@ __all__ = (
     "reprounzip_setup",
     "reprounzip_upload",
     "reprounzip_download_all",
+    "reprounzip_download_file",
+    "reprozip_get_output_files",
     "reprounzip_run",
-    "reprounzip_add_environment_variables"
+    "reprounzip_add_environment_variables",
 )
