@@ -80,7 +80,7 @@ class ReproStandardExecutor:
 
     def deliver(self, _, result):
         """Deliver results to descendants vertices."""
-        self.__level.extend(result)
+        self.__level = list(set([*self.__level, *result]))
 
 
 class ReproParaDAGParallelTopologicalExecutor(TopologicalExecutor):
