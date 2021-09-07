@@ -11,8 +11,10 @@ include .editorconfig
 include *.py
 include *.rst
 include *.sh
+include *.yaml
 include LICENSE
 include pytest.ini
+include .dockerignore
 recursive-exclude docs/sphinx/_build *
 recursive-include bdcrrm_cli *.py
 recursive-include docs/sphinx *.bat
@@ -23,5 +25,7 @@ recursive-include docs/sphinx *.py
 recursive-include docs/sphinx *.rst
 recursive-include docs/sphinx Makefile
 recursive-include tests *.py
+recursive-include docker *.base
+recursive-include docker *.jupyter
 
 recursive-exclude examples *
