@@ -6,6 +6,8 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
+"""Temporal water mask library `spectral functions`."""
+
 from typing import Tuple
 
 import numpy as np
@@ -36,7 +38,6 @@ def ndwi2(green_file: str, nir_file: str, window: rio.windows.Window) -> Tuple[n
         accepts this object and allows only a portion of the scene to be processed. This can be used as a base strategy for
         parallelizing the NDWI2 calculation operation.
     """
-
     nir = rio.open(nir_file).read(window=window)
     green = rio.open(green_file).read(window=window)
 

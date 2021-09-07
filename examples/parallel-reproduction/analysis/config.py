@@ -6,10 +6,14 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
+"""Temporal water mask library `analysis pipeline configuration`."""
+
 import os
 
 
 class PipelineConfiguration:
+    """Pipeline configuration class."""
+
     #
     # General definitions
     #

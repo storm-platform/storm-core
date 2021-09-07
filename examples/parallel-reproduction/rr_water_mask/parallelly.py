@@ -6,6 +6,8 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
+"""Temporal water mask library `parallel functions`."""
+
 import os
 
 import rasterio as rio
@@ -22,6 +24,7 @@ def ndwi_delayed(stac_features,
                  ouput_directory,
                  n_jobs=3,
                  bands=DEFAULT_BAND_NAME):
+    """Process Normalized difference water index (NDWI) in a parallel way using joblib."""
     nir_band_name = DEFAULT_BAND_NAME["nir"]
     green_band_name = DEFAULT_BAND_NAME["green"]
 

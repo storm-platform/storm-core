@@ -5,22 +5,22 @@
 # Brazil Data Cube Reproducible Research Management CLI is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
+
+"""Temporal water mask library `pipeline definion module`."""
+
 import os
 
-from stac import STAC
-
+from config import PipelineConfiguration as config
 from rr_water_mask.parallelly import ndwi_delayed
 from rr_water_mask.stac import filter_stac_features_by_asset_name
-
-from config import PipelineConfiguration as config
+from stac import STAC
 
 
 def temporal_water_mask(feature_index: int):
-    """
-    Run the Temporal Water Mask
+    """Run the Temporal Water Mask.
+
     :param feature_index: Index of STACFeature that will be processed
     """
-
     #
     # 1. STAC Service and STAC Collection
     #

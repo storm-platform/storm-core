@@ -6,20 +6,24 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
+"""Temporal water mask library `stac functions`."""
+
 from typing import Dict, List, Tuple
 
 
 def filter_stac_features_by_asset_name(stac_features: List[Dict], assets: Tuple) -> List[Dict]:
     """Filter STAC Features by asset names.
+
     Args:
         stac_features (List[Dict]): STAC Features to filter.
+
         assets (Tuple): Asset names to filter by.
+
     Returns:
         List[Dict]: A `Dict` with filtered STAC Features. The returned dictionary format contains the following keys:
             - `id`: STAC Feature ID.
             - `bands`: A `List` with the URL of the STAC Feature's bands. The bands are based on `assets` names.
     """
-
     scenes = []
 
     for feature in stac_features:
