@@ -10,22 +10,23 @@
 
 import fnmatch
 import os
-import uuid
 import shutil
+import uuid
 from tempfile import mkdtemp
 from typing import Dict, List, Tuple
 
 import plumbum
 from reprounzip.common import RPZPack
 from reprounzip.common import load_config as load_config_file
+from reprounzip.utils import iteritems
 from reprozip.pack import pack
 from reprozip.tracer import trace
 from rpaths import Path
 from ruamel.yaml import YAML
-from reprounzip.utils import iteritems
 
 from .config import EnvironmentConfig
-from .environment import run_container, export_container, remove_image, import_image_from_tarfile
+from .environment import (export_container, import_image_from_tarfile,
+                          remove_image, run_container)
 
 
 def _generate_uuid() -> str:
@@ -349,7 +350,6 @@ def reprozip_execution_metadata(repropack_directory: str, working_directories: L
             - `inputs`: The execution input files;
             - `outputs`: The execution output files;
     """
-
     # ToDo: Maybe this filter function is temporary. In the future, the complete object will be used.
     def _extract_path(input_output_config: List[Dict]) -> List[str]:
         """Extract only `path` key from input/output ReproZip directory.

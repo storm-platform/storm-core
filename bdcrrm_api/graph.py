@@ -9,8 +9,8 @@
 """Graph Manager."""
 
 import copy
-import itertools
 import functools
+import itertools
 import json
 from datetime import datetime
 from typing import Dict, List, Union

@@ -17,7 +17,6 @@ import multihash as _multihash
 
 def checksum_string_or_list(string_or_list: str):
     """Generate a checksum from a string or list of strings."""
-
     if isinstance(string_or_list, str):
         string_or_list = string_or_list.split()
 

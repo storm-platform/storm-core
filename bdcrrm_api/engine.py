@@ -19,11 +19,11 @@ from .graph import ExecutionGraphManager, VertexStatus
 from .persistence import FilesPersistencePickle, GraphPersistencePickle
 from .reprozip import (filter_reprozip_config_files,
                        reprounzip_add_environment_variables,
-                       reprounzip_run,
+                       reprounzip_download_file, reprounzip_run,
                        reprounzip_setup, reprounzip_upload,
                        reprozip_execute_script, reprozip_execution_metadata,
-                       reprozip_pack_execution,
-                       reprozip_remove_environment_variables, reprozip_get_output_files, reprounzip_download_file)
+                       reprozip_get_output_files, reprozip_pack_execution,
+                       reprozip_remove_environment_variables)
 
 
 class ExecutionEngine(object):
