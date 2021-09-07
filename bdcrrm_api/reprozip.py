@@ -537,6 +537,7 @@ def reprounzip_upload(reproduction_path: str, source_file_path: str, target_file
     See:
         https://docs.reprozip.org/en/1.0.x/unpacking.html
     """
+
     def _fs_layer_control(repropack_directory: str):
         """Reduce the image layers to avoid reprozip problems.
 
@@ -547,7 +548,7 @@ def reprounzip_upload(reproduction_path: str, source_file_path: str, target_file
             None: Image will be modified directly on docker daemon.
         """
         from reprounzip.unpackers.common.misc import metadata_read
-        reproduction_metadata = metadata_read(repropack_directory, "docker")
+        reproduction_metadata = metadata_read(Path(repropack_directory), "docker")
 
         # removing layers and recreating the base image
         image = reproduction_metadata["current_image"].decode("utf-8")
@@ -555,7 +556,6 @@ def reprounzip_upload(reproduction_path: str, source_file_path: str, target_file
         # creating a base container
         container = run_container(
             image=image,
-            auto_remove=True,
             entrypoint="/busybox sh",
             detach=True
         )
@@ -570,7 +570,7 @@ def reprounzip_upload(reproduction_path: str, source_file_path: str, target_file
 
         # creating the new image
         import_image_from_tarfile(container_fs_path, image)
-        shutil.rmtree(container_fs_path)
+        os.remove(container_fs_path)
 
     # defining the upload callback
     upload_fnc = (
