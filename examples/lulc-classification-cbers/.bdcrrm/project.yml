@@ -1,8 +1,8 @@
 metadata:
   name: lulc-classification-cbers
 
-  description: Reproducible Land Use and Land Cover classification using the SITS
-    analytical package.
+  description: Reproducible Land Use and Land Cover classification for 
+    CBERS-4/AWFI Data Cube, using the SITS analytical R package.
 
   licenses:
     code: MIT

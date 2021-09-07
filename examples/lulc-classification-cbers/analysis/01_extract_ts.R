@@ -1,50 +1,41 @@
 set.seed(777)
 library(sits)
 
-#
-# Auxiliary function
-#
-extract_ts_by_sample_location <- function(collection, start_date, end_date, bands, tiles, sample_file) {
-  cube <- sits_cube(
-    source      = "BDC",
-    name        = "cube_to_extract_sample",
-    collection  = collection,
-    start_date  = start_date,
-    end_date    = end_date,
-    bands       = bands,
-    tiles       = tiles
-  )
-
-  samples <- sits_get_data(cube = cube, file = sample_file, multicores = 8)
-  samples
-}
-
-#
-# General definitions
-#
-start_date  <- "2018-09-14"
-end_date    <- "2019-07-28"
-sample_file <- "data/raw_data/training-samples.csv"
+source("analysis/.pipeline.R")
 
 #
 # Output directory
 #
-output_dir <- paste("data", "derived_data", sep = "/")
-dir.create(
-  path         = output_dir,
-  showWarnings = FALSE,
-  recursive    = TRUE
+output_dir <-  paste(
+  .pipeline_definitions$output_base, .pipeline_definitions$collection, sep = "/")
+
+dir.create(path         = output_dir,
+           showWarnings = FALSE,
+           recursive    = TRUE)
+
+#
+# Data Cube
+#
+cube <- sits_cube(
+  source      = "BDC",
+  name        = "cube_to_extract_sample",
+  collection  = .pipeline_definitions$collection,
+  start_date  = .pipeline_definitions$start_date,
+  end_date    = .pipeline_definitions$end_date,
+  bands       = .pipeline_definitions$bands,
+  tiles       = .pipeline_definitions$tiles
 )
 
 #
-# CBERS-4/AWFI (16 days 'stack')
+# Extracting samples
 #
-cb4_samples_with_ts <- extract_ts_by_sample_location(
-  collection  = "CB4_64_16D_STK-1",
-  start_date  = start_date,
-  end_date    = end_date,
-  bands       = c("BAND15", "BAND14", "BAND13", "BAND16", "NDVI", "EVI"),
-  sample_file = sample_file,
-  tiles       = "022024"
+samples_with_ts <- sits_get_data(
+  cube       = cube,
+  file       = .pipeline_definitions$sample_file,
+  multicores = .pipeline_definitions$multicores
 )
-saveRDS(cb4_samples_with_ts, paste0(output_dir, "/CB4_64_16D_STK_1.rds"))
+
+#
+# Saving the extracted time series
+#
+saveRDS(samples_with_ts, paste(output_dir, "samples_with_ts.rds", sep = "/"))
