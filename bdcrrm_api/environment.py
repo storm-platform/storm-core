@@ -8,9 +8,9 @@
 
 """Docker Environment Manager."""
 
-import docker
-
 import docker.models.containers
+
+import docker
 
 
 def _connect_to_docker_daemon() -> docker.DockerClient:
@@ -30,7 +30,7 @@ def _connect_to_docker_daemon() -> docker.DockerClient:
 
 
 def run_container(**kwargs):
-    """Wrapper function to execute a container on Host Machine Docker Daemon.
+    """Run Docker Container on Host Machine Docker Daemon.
 
     Args:
         kwargs (dict): Arguments to the `client.containers.run` function from `Docker SDK`
@@ -43,7 +43,7 @@ def run_container(**kwargs):
 
 
 def export_container(container_obj: docker.models.containers.Container, output_file: str):
-    """Wrapper function to export a container from the Host Machine Docker Daemon.
+    """Export Docker Container from the Host Machine Docker Daemon.
 
     Args:
         container_obj (docker.models.containers.Container): Object of the container that will be exported.
@@ -62,7 +62,7 @@ def export_container(container_obj: docker.models.containers.Container, output_f
 
 
 def remove_image(image_name: str, force=True, noprune=False):
-    """Wrapper function to remove a container from the Host Machine Docker Daemon.
+    """Remove a Docker Image from the Host Machine Docker Daemon.
 
     Args:
         image_name (str): Name of the image that will be removed.
@@ -82,7 +82,7 @@ def remove_image(image_name: str, force=True, noprune=False):
 
 
 def import_image_from_tarfile(tarfile: str, repository: str, tag="latest"):
-    """Wrapper function to import a image to the Host Machine Docker Daemon from a tarfile.
+    """Import a Docker Image to the Host Machine Docker Daemon from a tarfile.
 
     Args:
         tarfile (str): Full path to the tarfile that will be imported.

@@ -19,11 +19,11 @@ from .graph import ExecutionGraphManager, VertexStatus
 from .persistence import FilesPersistencePickle, GraphPersistencePickle
 from .reprozip import (filter_reprozip_config_files,
                        reprounzip_add_environment_variables,
-                       reprounzip_run,
+                       reprounzip_download_file, reprounzip_run,
                        reprounzip_setup, reprounzip_upload,
                        reprozip_execute_script, reprozip_execution_metadata,
-                       reprozip_pack_execution,
-                       reprozip_remove_environment_variables, reprozip_get_output_files, reprounzip_download_file)
+                       reprozip_get_output_files, reprozip_pack_execution,
+                       reprozip_remove_environment_variables)
 
 
 class ExecutionEngine(object):
@@ -227,12 +227,12 @@ class ExecutionEngine(object):
         # upload missing input files (removed on experiment export with `datasources` options)
         vertex_inputs_to_define_files = []
         if missing_inputs_to_upload:
-            vertex_inputs_to_define_files = list(map(os.path.basename, vertex["inputs_to_define"]))
+            vertex_inputs_to_define_files_names = list(map(os.path.basename, vertex["inputs_to_define"]))
             vertex_inputs_to_define_files = (
                 list(map(
                     lambda x: x["target"],
                     filter(
-                        lambda x: os.path.basename(x["target"]) in vertex_inputs_to_define_files,
+                        lambda x: os.path.basename(x["target"]) in vertex_inputs_to_define_files_names,
                         missing_inputs_to_upload["files"]
                     )
                 ))
@@ -240,7 +240,7 @@ class ExecutionEngine(object):
 
             # In case of a difference, the reproduction is not possible,
             # since the files for the experiment are missing
-            if vertex["inputs_to_define"].difference(vertex_inputs_to_define_files):
+            if set(map(os.path.basename, vertex["inputs_to_define"])).difference(vertex_inputs_to_define_files_names):
                 raise RuntimeError("You cannot run the experiment, there are input files that need to be defined. "
                                    "Check out the input file.")
 

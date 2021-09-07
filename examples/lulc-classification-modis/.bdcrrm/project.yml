@@ -1,9 +1,9 @@
 metadata:
   name: lulc-classification-modis
 
-  description: Reproducible Land Use and Land Cover Classification using MOD13Q1 Data
-    Cube
-
+  description: Reproducible Land Use and Land Cover classification for 
+    MOD13Q1 Data Cube, using the SITS analytical R package.
+  
   licenses:
     code: MIT
 

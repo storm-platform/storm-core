@@ -9,10 +9,9 @@
 """Brazil Data Cube Reproducible Research Command-Line Interface Operations."""
 
 import os
-from typing import Dict
+from typing import Dict, Tuple
 
 from igraph import Graph
-from typing import Tuple
 
 from ...config import EnvironmentConfig, ProjectConfig
 from ...engine import ExecutionEngine

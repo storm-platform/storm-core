@@ -17,13 +17,14 @@ import multihash as _multihash
 
 def checksum_string_or_list(string_or_list: str):
     """Generate a checksum from a string or list of strings."""
-    if isinstance(string_or_list, list):
-        string_or_list = "".join(string_or_list)
+    if isinstance(string_or_list, str):
+        string_or_list = string_or_list.split()
 
-    # sorting
-    string = "".join(sorted(string_or_list))
+    # sorting to avoid problems with command parameters order
+    string_or_list = sorted(string_or_list)
+    string_or_list = " ".join(string_or_list)
 
-    return hashlib.sha256((''.join(sorted(string))).encode('utf-8')).digest()
+    return hashlib.sha256(string_or_list.encode('utf-8')).digest()
 
 
 def checksum_file(file_path: Union[str, Path], chunk_size=16384) -> bytes:
@@ -64,13 +65,17 @@ def multihash_checksum_sha256(data: Union[str, list, Path]):
     See more in https://github.com/multiformats/py-multihash/blob/master/multihash/constants.py#L4
 
     Args:
-        data Union[str, list, Path]: Path to the file
+        data Union[str, list, Path]: Path to the file, string or link content.
 
     Returns:
         A string-like hash in hex-decimal
 
-    Note:
+    See:
         This code is adapted from: https://github.com/brazil-data-cube/bdc-catalog
+
+    Note:
+        When data is a `Path` instance, the checksum is calculated from the associated file. Otherwise, the function
+        calculate the string/listi checksum.
     """
     sha256 = 0x12
     sha256_length = 0x20

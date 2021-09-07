@@ -8,12 +8,11 @@
 
 """Brazil Data Cube Reproducible Research Management CLI."""
 
-from .version import __version__
-
 from .engine import ExecutionEngine
-from .graph import ExecutionGraphManager, JSONGraphConverter, plot_execution_graph
-
+from .graph import (ExecutionGraphManager, JSONGraphConverter,
+                    plot_execution_graph)
 from .persistence import BagItExporter
+from .version import __version__
 
 __all__ = (
     "__version__",

@@ -10,22 +10,23 @@
 
 import fnmatch
 import os
-import uuid
 import shutil
+import uuid
 from tempfile import mkdtemp
 from typing import Dict, List, Tuple
 
 import plumbum
 from reprounzip.common import RPZPack
 from reprounzip.common import load_config as load_config_file
+from reprounzip.utils import iteritems
 from reprozip.pack import pack
 from reprozip.tracer import trace
 from rpaths import Path
 from ruamel.yaml import YAML
-from reprounzip.utils import iteritems
 
 from .config import EnvironmentConfig
-from .environment import run_container, export_container, remove_image, import_image_from_tarfile
+from .environment import (export_container, import_image_from_tarfile,
+                          remove_image, run_container)
 
 
 def _generate_uuid() -> str:
@@ -349,7 +350,6 @@ def reprozip_execution_metadata(repropack_directory: str, working_directories: L
             - `inputs`: The execution input files;
             - `outputs`: The execution output files;
     """
-
     # ToDo: Maybe this filter function is temporary. In the future, the complete object will be used.
     def _extract_path(input_output_config: List[Dict]) -> List[str]:
         """Extract only `path` key from input/output ReproZip directory.
@@ -537,6 +537,7 @@ def reprounzip_upload(reproduction_path: str, source_file_path: str, target_file
     See:
         https://docs.reprozip.org/en/1.0.x/unpacking.html
     """
+
     def _fs_layer_control(repropack_directory: str):
         """Reduce the image layers to avoid reprozip problems.
 
@@ -547,7 +548,7 @@ def reprounzip_upload(reproduction_path: str, source_file_path: str, target_file
             None: Image will be modified directly on docker daemon.
         """
         from reprounzip.unpackers.common.misc import metadata_read
-        reproduction_metadata = metadata_read(repropack_directory, "docker")
+        reproduction_metadata = metadata_read(Path(repropack_directory), "docker")
 
         # removing layers and recreating the base image
         image = reproduction_metadata["current_image"].decode("utf-8")
@@ -555,7 +556,6 @@ def reprounzip_upload(reproduction_path: str, source_file_path: str, target_file
         # creating a base container
         container = run_container(
             image=image,
-            auto_remove=True,
             entrypoint="/busybox sh",
             detach=True
         )
@@ -570,7 +570,7 @@ def reprounzip_upload(reproduction_path: str, source_file_path: str, target_file
 
         # creating the new image
         import_image_from_tarfile(container_fs_path, image)
-        shutil.rmtree(container_fs_path)
+        os.remove(container_fs_path)
 
     # defining the upload callback
     upload_fnc = (
