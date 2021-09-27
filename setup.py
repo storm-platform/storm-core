@@ -36,22 +36,18 @@ tests_require = [
 examples_require = [
 ]
 
-visual_require = [
+cli_require = [
     'asciidag>=0.2.0',
     'cairocffi>=1.2.0',
-    'rich>=10.7.0'
-]
-
-docker_unpacker = [
-    'reprounzip-docker>=1.1',
+    'rich>=10.7.0',
+    'Click>=7.0',
 ]
 
 extras_require = {
     'docs': docs_require,
     'examples': examples_require,
     'tests': tests_require,
-    'visual': visual_require,
-    'docker-unpacker': docker_unpacker
+    'cli': cli_require
 }
 
 extras_require['all'] = [req for _, reqs in extras_require.items() for req in reqs]
@@ -60,23 +56,35 @@ setup_requires = [
     'pytest-runner>=5.2',
 ]
 
-install_requires = [
-    'Click>=7.0',
-    'dictdiffer>=0.8.1',
-    'py-multihash>=2.0.1',
-    'python-igraph>=0.9.6',
-    'rpaths>=1.0.0',
-    'reprozip>=1.1',
-    'reprounzip>=1.1',
-    'bagit>=1.8.1',
-    'yamlize>=0.7.0',
-    'cookiecutter>=1.7.3',
-    'plumbum>=1.7.0',
-    'ruamel.yaml>=0.17.10',
-    'docker>=5.0.0',
-    'pandas>=1.3.1',
+processing_dependencies = [
     'paradag>=1.2.0',
 ]
+
+graph_dependencies = [
+    'python-igraph>=0.9.6',
+]
+
+environment_dependencies = [
+    'reprozip>=1.1',
+    'reprounzip>=1.1',
+    'reprounzip-docker>=1.1',
+]
+
+base_dependencies = [
+    'dictdiffer>=0.8.1',
+    'py-multihash>=2.0.1',
+    'pandas>=1.3.1',
+    'docker>=5.0.0',
+    'ruamel.yaml>=0.17.10',
+    'plumbum>=1.7.0',
+    'cookiecutter>=1.7.3',
+    'bagit>=1.8.1',
+    'rpaths>=1.0.0',
+    'yamlize>=0.7.0',
+    'base32-lib>=1.0.2'
+]
+
+install_requires = [*base_dependencies, *processing_dependencies, *graph_dependencies, *environment_dependencies]
 
 packages = find_packages()
 
