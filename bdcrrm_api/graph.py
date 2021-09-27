@@ -21,6 +21,8 @@ from igraph import Graph, VertexSeq, plot
 from .config import GraphStyleConfig
 from .hasher import multihash_checksum_sha256
 
+import base32_lib as base32
+
 # FixMe: Workaround to enable neighbor deletion in igraph
 # https://igraph.org/python/doc/api/igraph._igraph.GraphBase.html#neighborhood
 MAX_IGRAPH_ORDER = 10000
@@ -152,7 +154,8 @@ class ExecutionGraphManager(object):
                         if not set(vertex_l2["inputs"]).isdisjoint(reference_outputs):
                             self._graph.add_edge(vertex_l1, vertex_l2)
 
-    def add_vertex(self, repropack: str, command: List[str], inputs: Dict[str, Dict], outputs: Dict[str, Dict]) -> None:
+    def add_vertex(self, repropack: str, command: List[str], inputs: Dict[str, Dict], outputs: Dict[str, Dict],
+                   name: str = None) -> None:
         """Add a new vertex to the execution graph.
 
         This method adds a run with its executed command information created by the ReproZip package to the graph.
@@ -166,6 +169,8 @@ class ExecutionGraphManager(object):
             inputs (Dict[Dict]): A dict with `path` and `checksum` of input files.
 
             outputs (Dict[Dict]): A dict with `path` and `checksum` of output files.
+
+            name (str): Vertex name.
 
         Returns:
             None: The new vertex is added or updated.
@@ -185,6 +190,8 @@ class ExecutionGraphManager(object):
             vertex = actual_vertex[0]
             self.update_vertex(command, repropack, inputs, outputs)
         else:
+            vertex_name = name if name else base32.generate(length=10, split_every=5, checksum=True)
+
             vertex = self._graph.add_vertex(
                 inputs=inputs,
                 outputs=outputs,
@@ -193,7 +200,8 @@ class ExecutionGraphManager(object):
                 status=VertexStatus.Updated,
                 command=" ".join(command),
                 command_checksum=_command_checksum,
-                inputs_to_define=[]
+                inputs_to_define=[],
+                name=vertex_name
             )
 
         self._rebuild_graph()
@@ -340,8 +348,8 @@ class JSONGraphConverter(object):
         return {
             "graph": {
                 "directed": graph.is_directed(),
-                "nodes": nodes,
-                "edges": edges,
+                "nodes": nodes if nodes else {},
+                "edges": edges if edges else [],
                 **kwargs
             }
         }
@@ -360,10 +368,10 @@ class JSONGraphConverter(object):
         # ToDo: Add GraphJSON validator (marshmallow)
         # extract data
         graph_data = data["graph"]
-        graph_vertices = graph_data["nodes"]
-        graph_edges = graph_data["edges"]
+        graph_vertices = graph_data.get("nodes", {})
+        graph_edges = graph_data.get("edges", [])
 
-        g = Graph(directed=graph_data["directed"])
+        g = Graph(directed=graph_data.get("directed", False))
 
         #
         # Rebuilding the graph
@@ -373,7 +381,8 @@ class JSONGraphConverter(object):
         for vertex in graph_vertices:
             vertex_data = graph_vertices[vertex]
 
-            g.add_vertex(vertex, **vertex_data["metadata"])
+            metadata = vertex_data.get("metadata", {})
+            g.add_vertex(**metadata)
 
         # adding edges
         for edge in graph_edges:
