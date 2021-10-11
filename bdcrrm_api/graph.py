@@ -382,6 +382,10 @@ class JSONGraphConverter(object):
             vertex_data = graph_vertices[vertex]
 
             metadata = vertex_data.get("metadata", {})
+
+            # Change date types
+            metadata["updated_in"] = datetime.fromisoformat(metadata["updated_in"])
+
             g.add_vertex(**metadata)
 
         # adding edges
