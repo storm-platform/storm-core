@@ -6,6 +6,17 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
-"""Version information for SpatioTemporal Open Research Manager."""
+from typing import List
 
-__version__ = "0.2.0"
+from .components import InspectorFileRemoverComponent, InspectorComponent
+
+
+class InspectorConfig:
+    components: List[InspectorComponent] = [
+        InspectorFileRemoverComponent
+    ]
+
+
+__all__ = (
+    "InspectorGeneralComponent"
+)

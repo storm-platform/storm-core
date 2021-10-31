@@ -5,7 +5,3 @@
 # SpatioTemporal Open Research Manager Core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
-
-"""Version information for SpatioTemporal Open Research Manager."""
-
-__version__ = "0.2.0"

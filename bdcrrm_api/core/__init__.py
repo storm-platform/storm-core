@@ -6,6 +6,10 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
-"""Version information for SpatioTemporal Open Research Manager."""
+from .pipeline import ResearchPipeline
+from .compendium import ExecutionCompendium
 
-__version__ = "0.2.0"
+__all__ = (
+    "ResearchPipeline",
+    "ExecutionCompendium"
+)

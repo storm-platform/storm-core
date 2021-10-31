@@ -1,8 +1,8 @@
 #
-# This file is part of Brazil Data Cube Reproducible Research Management API.
+# This file is part of SpatioTemporal Open Research Manager Core.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
+# SpatioTemporal Open Research Manager Core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
@@ -10,23 +10,16 @@
 
 import fnmatch
 import os
-import shutil
 import uuid
-from tempfile import mkdtemp
 from typing import Dict, List, Tuple
 
 import plumbum
-from reprounzip.common import RPZPack
 from reprounzip.common import load_config as load_config_file
 from reprounzip.utils import iteritems
 from reprozip.pack import pack
 from reprozip.tracer import trace
 from rpaths import Path
 from ruamel.yaml import YAML
-
-from .config import EnvironmentConfig
-from .environment import (export_container, import_image_from_tarfile,
-                          remove_image, run_container)
 
 
 def _generate_uuid() -> str:
@@ -49,31 +42,31 @@ def _filter_none_values(values: List) -> List:
     )
 
 
-def _load_reprozip_config_file(repropack_directory: str) -> Dict:
+def _load_reprozip_config_file(reprozip_bundle_directory: str) -> Dict:
     """Load the Reprozip configuration file.
 
     Args:
-        repropack_directory (str): The directory where the ReproZip execution files is saved.
+        reprozip_bundle_directory (str): The directory where the ReproZip execution files is saved.
 
     Returns:
         Dict: Dictionary object with data loaded from configuration file.
     """
-    config_file = os.path.join(repropack_directory, "config.yml")
+    config_file = os.path.join(reprozip_bundle_directory, "config.yml")
     return YAML().load(open(config_file))
 
 
-def _save_reprozip_config_file(repropack_directory: str, config_obj: Dict) -> str:
+def _save_reprozip_config_file(reprozip_bundle_directory: str, config_obj: Dict) -> str:
     """Save a Reprozip configuration file.
 
     Args:
-        repropack_directory (str): The directory where the ReproZip execution files is saved.
+        reprozip_bundle_directory (str): The directory where the ReproZip execution files is saved.
 
         config_obj (Dict): Dictionary object with data that should be added on the configuration file.
 
     Returns:
         None: The configuration file will be updated in-place.
     """
-    config_file = os.path.join(repropack_directory, "config.yml")
+    config_file = os.path.join(reprozip_bundle_directory, "config.yml")
 
     with open(config_file, "w") as f:
         YAML().dump(config_obj, f)
@@ -84,7 +77,7 @@ def _exclude_execution_input_files_by_already_generated_files(reprozip_execution
                                                               already_generated_files: List[str]) -> Tuple[Dict, List]:
     """Remove files/directories from the configuration file based on already generated files.
 
-    In the bdcrrm-api the reprozip is being used as a basis for script execution. The outputs are
+    In the storm-core, the reprozip is being used as a basis for script execution. The outputs are
     inserted into the graph and used for the connection operations of each of these. To prevent a
     file that is generated in a previous step of the execution from being included in the package,
     this function filters and removes from the configuration file, all entries that are already
@@ -118,8 +111,8 @@ def _exclude_execution_input_files_by_already_generated_files(reprozip_execution
     return reprozip_execution_config, excluded_files
 
 
-def _exclude_execution_input_files_by_datasources(reprozip_execution_config: Dict,
-                                                  datasources: Dict[str, str]) -> Tuple[Dict, List]:
+def _exclude_execution_input_files_from_bundle_by_datasources(reprozip_execution_config: Dict,
+                                                              datasources: Dict[str, str]) -> Tuple[Dict, List]:
     """Remove files/directories from the configuration file based on `datasources` definitions.
 
     Using the files in the `other_files` section of the ReproZip configuration file as a basis,
@@ -158,7 +151,7 @@ def _exclude_execution_input_files_by_datasources(reprozip_execution_config: Dic
         datasource = datasources[datasource_key]
 
         for idx, other_file in enumerate(reprozip_execution_config["other_files"]):
-            if fnmatch.fnmatch(other_file, datasource["pattern"]):
+            if other_file and fnmatch.fnmatch(other_file, datasource["pattern"]):
                 if datasource["action"] == "exclude":
                     excluded_files.append(
                         reprozip_execution_config["other_files"][idx]
@@ -170,15 +163,17 @@ def _exclude_execution_input_files_by_datasources(reprozip_execution_config: Dic
     return reprozip_execution_config, excluded_files
 
 
-def _extract_execution_input_by_working_dir(reprozip_execution_config: Dict,
-                                            working_directories: List[str]) -> List[Dict]:
+def _extract_execution_input(reprozip_execution_config: Dict, working_directory: str,
+                             ignored_objects: Dict) -> List[Dict]:
     """Extract the execution input by working directory.
 
     This function filters the input files defined by ReproZip.
     Args:
         reprozip_execution_config (Dict): The ReproZip execution metadata (`config.yml`) dict object.
 
-        working_directories (List[str]): The working directories used to filter the execution input.
+        working_directory (str): The working directory used to filter the execution input.
+
+        ignored_objects (Dict): Files/Directories that must be ignored when defining input data.
 
     Returns:
         List[Dict]: The execution input files filtered by working directory.
@@ -187,17 +182,24 @@ def _extract_execution_input_by_working_dir(reprozip_execution_config: Dict,
         The filter is done based on `working_directories`. Therefore, all files inside these directories are considered.
         This heuristic is used to prevent invalid files (e.g., binaries, system libraries) from being used as "input data".
     """
+
+    def _is_ignored(file_path: str, ignored_objects: Dict):
+        for ignored_object_key in ignored_objects.keys():
+            if fnmatch.fnmatch(file_path, ignored_objects[ignored_object_key]):
+                return True
+        return False
+
     if not reprozip_execution_config["inputs_outputs"]:
         return []
 
     inputs = []
-    for working_directory in working_directories:
-        for input_output_file in reprozip_execution_config["inputs_outputs"]:
+    for input_output_file in reprozip_execution_config["inputs_outputs"]:
+        is_ignored = _is_ignored(input_output_file["path"], ignored_objects)
 
-            if working_directory in input_output_file["path"]:
-                # verify if file is a input (written by nobody - ReproZip heuristic)
-                if len(input_output_file["written_by_runs"]) == 0:
-                    inputs.append(input_output_file)
+        if working_directory in input_output_file["path"] and not is_ignored:
+            # verify if file is a input (written by nobody - ReproZip heuristic)
+            if len(input_output_file["written_by_runs"]) == 0:
+                inputs.append(input_output_file)
     return inputs
 
 
@@ -229,12 +231,12 @@ def _extract_command(reprozip_execution_config: Dict) -> List[str]:
     Returns:
         List[str]: The execution command.
     """
-    # in bdcrrm, the reprozip execution strategy always generate a unique execution per command
+    # in storm-core, the reprozip execution strategy always generate a unique execution per command
     return reprozip_execution_config["runs"][0]["argv"]
 
 
 def _remove_command_from_input(command: List[str], input_files: List[str]) -> List[str]:
-    """Remove the executed script from the variables considered as input.
+    """Remove the executed command from the variables considered as input.
 
     Args:
         command (List[str]): The execution command.
@@ -247,16 +249,16 @@ def _remove_command_from_input(command: List[str], input_files: List[str]) -> Li
     return [x for x in input_files if all(os.path.basename(x) not in c for c in command)]
 
 
-def _check_empty_environment_variable(repropack_directory: str) -> None:
+def _check_empty_environment_variable(reprozip_bundle_directory: str) -> None:
     """Check for empty environment variables on reprozip experiment configuration.
 
     Args:
-        repropack_directory: The directory where the ReproZip execution files is saved.
+        reprozip_bundle_directory: The directory where the ReproZip execution files is saved.
 
     Raises:
         RuntimeError: When on the reprozip configuration file a environment variable is empty.
     """
-    reprozip_execution_config = _load_reprozip_config_file(repropack_directory)
+    reprozip_execution_config = _load_reprozip_config_file(reprozip_bundle_directory)
     for idx, run in enumerate(reprozip_execution_config["runs"]):
 
         run_environment_variables = reprozip_execution_config["runs"][idx]["environ"]
@@ -267,7 +269,7 @@ def _check_empty_environment_variable(repropack_directory: str) -> None:
                                    "Check the secrets file before continuing")
 
 
-def filter_reprozip_config_files(repropack_directory: str, datasources: dict,
+def filter_reprozip_config_files(reprozip_bundle_directory: str, datasources: dict,
                                  already_generated_files: List[str]) -> Dict[str, List]:
     """Delete configuration file contents from the execution performed by ReproZip.
 
@@ -279,7 +281,7 @@ def filter_reprozip_config_files(repropack_directory: str, datasources: dict,
         - 2. File is contained in the directory, pattern or file declared as `exclude`.
 
     Args:
-        repropack_directory: The directory where the ReproZip execution files is saved.
+        reprozip_bundle_directory: The directory where the ReproZip execution files is saved.
 
         datasources (List[Dict[str, str]]): The datasources definitions. This definition is a dictionary in
         which each key is the name of a datasource. The content associated with each key is a dictionary
@@ -308,7 +310,7 @@ def filter_reprozip_config_files(repropack_directory: str, datasources: dict,
     See:
         https://docs.python.org/pt-br/3/library/fnmatch.html
     """
-    reprozip_execution_config = _load_reprozip_config_file(repropack_directory)
+    reprozip_execution_config = _load_reprozip_config_file(reprozip_bundle_directory)
 
     # exclude files that are already generated into the execution graph.
     excluded_files_from_graph = []
@@ -322,12 +324,12 @@ def filter_reprozip_config_files(repropack_directory: str, datasources: dict,
     # exclude files that are defined as datasources.
     excluded_files_from_datasources = []
     if datasources:
-        reprozip_execution_config, excluded_files_from_datasources = _exclude_execution_input_files_by_datasources(
+        reprozip_execution_config, excluded_files_from_datasources = _exclude_execution_input_files_from_bundle_by_datasources(
             reprozip_execution_config, datasources
         )
 
     # write the new config file
-    _save_reprozip_config_file(repropack_directory, reprozip_execution_config)
+    _save_reprozip_config_file(reprozip_bundle_directory, reprozip_execution_config)
 
     return {
         "graph": excluded_files_from_graph,
@@ -335,22 +337,22 @@ def filter_reprozip_config_files(repropack_directory: str, datasources: dict,
     }
 
 
-def reprozip_execution_metadata(repropack_directory: str, working_directories: List[str]):
+def reprozip_execution_metadata(reprozip_bundle_directory: str, working_directory: str, ignored_objects: Dict):
     """Extract the execution metadata from a ReproZip pack.
 
     Args:
-        repropack_directory: The directory where the ReproZip execution files is saved.
+        reprozip_bundle_directory: The directory where the ReproZip execution files is saved.
 
-        working_directories (List[str]): The working directories used to filter the execution input.
+        working_directory (List[str]): The working directories used to filter the execution input.
+
+        ignored_objects (Dict): Dict with the Files/Directories references that must be ignored when defining input data.
 
     Returns:
         Dict: The execution metadata with the following fields:
-            - `repropack`: The path to the ReproZip Pack file;
-            - `command`: The execution command;
             - `inputs`: The execution input files;
-            - `outputs`: The execution output files;
+            - `outputs`: The execution output files.
     """
-    # ToDo: Maybe this filter function is temporary. In the future, the complete object will be used.
+
     def _extract_path(input_output_config: List[Dict]) -> List[str]:
         """Extract only `path` key from input/output ReproZip directory.
 
@@ -366,8 +368,7 @@ def reprozip_execution_metadata(repropack_directory: str, working_directories: L
             )
         )
 
-    pack_path = os.path.join(repropack_directory, "pack.rpz")
-    reprozip_execution_config = YAML().load(RPZPack(pack_path).open_config())
+    reprozip_execution_config = _load_reprozip_config_file(reprozip_bundle_directory)
 
     # extract values
     command = _extract_command(reprozip_execution_config)
@@ -376,7 +377,7 @@ def reprozip_execution_metadata(repropack_directory: str, working_directories: L
     inputs = _remove_command_from_input(
         command,
         _extract_path(
-            _extract_execution_input_by_working_dir(reprozip_execution_config, working_directories)
+            _extract_execution_input(reprozip_execution_config, working_directory, ignored_objects)
         )
     )
 
@@ -385,25 +386,25 @@ def reprozip_execution_metadata(repropack_directory: str, working_directories: L
     )
 
     return {
-        "repropack": pack_path,
-        "command": command,
+        # "command": command,
         "inputs": inputs,
         "outputs": outputs
     }
 
 
-def reprozip_remove_environment_variables(repropack_directory: str, environment_variables: List[str]):
+def reprozip_remove_environment_variables(reprozip_bundle_directory: str, environment_variables: List[str]) -> List[
+    str]:
     """Remove environment variables from a reprozip execution environment.
 
     Args:
-        repropack_directory (str): The directory where the ReproZip execution files is saved.
+        reprozip_bundle_directory (str): The directory where the ReproZip execution files is saved.
 
         environment_variables (List[str]): List of environment variables that should be removed from the
                                            experiment environment.
     Returns:
         None: The environment variables will be removed from the reprozip configuration file in-place.
     """
-    reprozip_execution_config = _load_reprozip_config_file(repropack_directory)
+    reprozip_execution_config = _load_reprozip_config_file(reprozip_bundle_directory)
 
     # go through runs
     for idx, run in enumerate(reprozip_execution_config["runs"]):
@@ -411,15 +412,17 @@ def reprozip_remove_environment_variables(repropack_directory: str, environment_
             if environment_variable in run["environ"]:
                 reprozip_execution_config["runs"][idx]["environ"][environment_variable] = None
 
-    _save_reprozip_config_file(repropack_directory, reprozip_execution_config)
+    _save_reprozip_config_file(reprozip_bundle_directory, reprozip_execution_config)
+
+    return environment_variables
 
 
-def reprozip_execute_script(reprofiles_directory: str, binary_command: str, arguments: Tuple[str],
+def reprozip_execute_script(execution_compendium_directory: str, binary_command: str, arguments: Tuple[str],
                             verbosity: str = "unset") -> str:
-    """Execute a script using ReproZip engine.
+    """Execute a script using the ReproZip engine.
 
     Args:
-        reprofiles_directory (str): The directory where the `bdcrrm` files will be saved.
+        execution_compendium_directory (str): The directory where the execution compendium files will be saved.
 
         binary_command (str): The binary command to execute the script.
 
@@ -428,43 +431,40 @@ def reprozip_execute_script(reprofiles_directory: str, binary_command: str, argu
         verbosity (str): The verbosity level to use.
 
     Returns:
-        str: The `repropack` directory where ReproZip trace saves the execution files.
+        str: The `execution compendium` directory where ReproZip trace saves the execution files.
     """
-    repropack_directory = os.path.join(reprofiles_directory, EnvironmentConfig.REPROPACK_EXEC_PATH, _generate_uuid())
-    os.makedirs(repropack_directory)
-
     # tracing the execution!
-    trace.trace(binary_command, arguments, repropack_directory, False, verbosity)
+    trace.trace(binary_command, arguments, execution_compendium_directory, False, verbosity)
 
     # write reprozip configuration file
-    trace.write_configuration(Path(repropack_directory), True, True, overwrite=False)
+    trace.write_configuration(Path(execution_compendium_directory), True, True, overwrite=False)
 
-    return repropack_directory
+    return execution_compendium_directory
 
 
-def reprozip_pack_execution(repropack_directory: str) -> str:
+def reprozip_pack_execution(reprozip_bundle_directory: str) -> str:
     """Create a ReproZip package for an experiment.
 
-    Retrieves the execution information stored in `repropack_directory` and generates the package. If needed the files
-    can be filtered using the `bdcrrm_cli.repropzip.filter_reprozip_config_files` function.
+    Retrieves the execution information stored in `reprozip_bundle_directory` and generates the package. If needed the files
+    can be filtered using the `storm_core.repropzip.filter_reprozip_config_files` function.
 
     Args:
-        repropack_directory (str): The directory where the ReproZip execution files is saved.
+        reprozip_bundle_directory (str): The directory where the ReproZip execution files is saved.
 
     Returns:
         str: Directory where the reprozip package is saved.
     """
-    repropack_pack_directory = os.path.join(repropack_directory, "pack.rpz")
-    pack(Path(repropack_pack_directory), Path(repropack_directory), True)
+    reprozip_bundle_file = os.path.join(reprozip_bundle_directory, "pack.rpz")
+    pack(Path(reprozip_bundle_file), Path(reprozip_bundle_directory), True)
 
-    return repropack_pack_directory
+    return reprozip_bundle_file
 
 
-def reprounzip_add_environment_variables(repropack_directory: str, environment_variables: List[str]):
+def reprounzip_add_environment_variables(reprozip_bundle_directory: str, environment_variables: List[str]):
     """Add environment variables to a reprounzip environment.
 
     Args:
-        repropack_directory (str): The directory where the ReproZip execution files is saved.
+        reprozip_bundle_directory (str): The directory where the ReproZip execution files is saved.
 
         environment_variables (List[str]): List of environment variables that should be added on the
                                            experiment environment before reproduction.
@@ -472,7 +472,7 @@ def reprounzip_add_environment_variables(repropack_directory: str, environment_v
     Returns:
         None: The environment variables will be added to reprozip configuration file in-place.
     """
-    reprozip_execution_config = _load_reprozip_config_file(repropack_directory)
+    reprozip_execution_config = _load_reprozip_config_file(reprozip_bundle_directory)
 
     # prepare the environment variables
     reprozip_environment_variables = []
@@ -501,14 +501,14 @@ def reprounzip_add_environment_variables(repropack_directory: str, environment_v
             env_name, env_value = environment_variable
 
             reprozip_execution_config["runs"][idx]["environ"][env_name] = env_value
-    _save_reprozip_config_file(repropack_directory, reprozip_execution_config)
+    _save_reprozip_config_file(reprozip_bundle_directory, reprozip_execution_config)
 
 
-def reprounzip_setup(repropack_path: str, reproduction_path: str, unpacker: str = "docker"):
+def reprounzip_setup(reprozip_bundle_path: str, reproduction_path: str, unpacker: str = "docker"):
     """Configure the directories and data needed to run an experiment through Reprounip.
 
     Args:
-        repropack_path (str): Path to the `.rpz` file.
+        reprozip_bundle_path (str): Path to the `.rpz` file.
 
         reproduction_path (str): Path where the data will be extracted.
 
@@ -518,79 +518,9 @@ def reprounzip_setup(repropack_path: str, reproduction_path: str, unpacker: str 
     """
     (
         plumbum.cmd.reprounzip[
-            unpacker, "setup", repropack_path, reproduction_path
+            unpacker, "setup", reprozip_bundle_path, reproduction_path
         ]
     )()
-
-
-def reprounzip_upload(reproduction_path: str, source_file_path: str, target_file_name: str, unpacker: str = "docker"):
-    """Upload a input file to a reprounzip experiment.
-
-    Args:
-        reproduction_path (str): Path where the reprounzip experiment is stored.
-
-        source_file_path (str): relative or absolute path to the file that will be uploaded.
-
-        target_file_name (str): name of the file that the `source_file_path` will be replace.
-
-        unpacker (str): Used Reprounip unpacker.
-    See:
-        https://docs.reprozip.org/en/1.0.x/unpacking.html
-    """
-
-    def _fs_layer_control(repropack_directory: str):
-        """Reduce the image layers to avoid reprozip problems.
-
-        Args:
-            repropack_directory (str): Path where the reprounzip experiment is stored.
-
-        Returns:
-            None: Image will be modified directly on docker daemon.
-        """
-        from reprounzip.unpackers.common.misc import metadata_read
-        reproduction_metadata = metadata_read(Path(repropack_directory), "docker")
-
-        # removing layers and recreating the base image
-        image = reproduction_metadata["current_image"].decode("utf-8")
-
-        # creating a base container
-        container = run_container(
-            image=image,
-            entrypoint="/busybox sh",
-            detach=True
-        )
-
-        # exporting only the container filesystem
-        container_fs_path = os.path.join(mkdtemp(), f"{image}.tar.gz")
-        export_container(container, container_fs_path)
-
-        # removing the original image
-        container.remove(force=True)
-        remove_image(image)
-
-        # creating the new image
-        import_image_from_tarfile(container_fs_path, image)
-        os.remove(container_fs_path)
-
-    # defining the upload callback
-    upload_fnc = (
-        plumbum.cmd.reprounzip[
-            unpacker, "upload", reproduction_path, f"{source_file_path}:{target_file_name}"
-        ]
-    )
-
-    try:
-        upload_fnc()
-    except:
-        # When an error occurs on upload, it is assumed that this problem
-        # is related to the Docker image layers used by the Reprozip.
-        #
-        # This is assumed since, up to this point, all steps are automated
-        # and are, in theory, trouble-free.
-        _fs_layer_control(reproduction_path)
-
-        # trying upload again
-        upload_fnc()
 
 
 def reprounzip_download_all(reproduction_path: str, unpacker: str = "docker"):
@@ -610,11 +540,11 @@ def reprounzip_download_all(reproduction_path: str, unpacker: str = "docker"):
     )()
 
 
-def reprounzip_download_file(reproduction_path: str, filename: str, output_directory: str, unpacker: str = "docker"):
+def reprounzip_download_file(reprozip_bundle_path: str, filename: str, output_directory: str, unpacker: str = "docker"):
     """Download file from a reprozip experiment.
 
     Args:
-        reproduction_path (str): Path where the reprounzip experiment is stored.
+        reprozip_bundle_path (str): Path where the reprounzip experiment is stored.
 
         filename (str): File that will be downloaded from reprozip experiment
 
@@ -629,26 +559,30 @@ def reprounzip_download_file(reproduction_path: str, filename: str, output_direc
 
     (
         plumbum.cmd.reprounzip[
-            unpacker, "download", reproduction_path, f"{filename}:{output_file}"
+            unpacker, "download", reprozip_bundle_path, f"{filename}:{output_file}"
         ]
     )()
 
 
-def reprounzip_run(reproduction_path: str, unpacker: str = "docker"):
+def reprounzip_run_docker_container(reproduction_path: str, volume_options: List[str] = None):
     """Execute a reprounzip experiment.
 
     Args:
         reproduction_path (str): Path where the reprounzip experiment is stored.
 
-        unpacker (str): Used Reprounip unpacker.
+        volume_options (List[str]): Volume definition in the docker supported format (/path/on/my/machine:/path/container:ro)
     See:
         https://docs.reprozip.org/en/1.0.x/unpacking.html
     """
     _check_empty_environment_variable(reproduction_path)
 
+    volume_command, volume_definition = None, None
+    if volume_options:
+        volume_command, volume_definition = '--docker-option=--volume', f'--docker-option={" ".join(volume_options)}'
+
     (
         plumbum.cmd.reprounzip[
-            unpacker, "run", reproduction_path
+            "docker", "run", reproduction_path, volume_command, volume_definition
         ]
     )()
 
@@ -661,12 +595,12 @@ def reprozip_get_output_files(reproduction_path: str):
     See:
         https://docs.reprozip.org/en/1.0.x/unpacking.html#managing-input-and-output-files
     """
-    repropack = Path(reproduction_path)
-    repropack_config = load_config_file(repropack / "config.yml", canonical=True)
+    reprozip_bundle = Path(reproduction_path)
+    reprozip_bundle_config = load_config_file(reprozip_bundle / "config.yml", canonical=True)
 
     output_paths = []
-    for output_name, f in sorted(iteritems(repropack_config.inputs_outputs)):
-        if f.write_runs and f.write_runs:
+    for output_name, f in sorted(iteritems(reprozip_bundle_config.inputs_outputs)):
+        if f.write_runs:
             output_paths.append(output_name)
 
     return output_paths
@@ -681,10 +615,9 @@ __all__ = (
     "reprozip_remove_environment_variables",
 
     "reprounzip_setup",
-    "reprounzip_upload",
     "reprounzip_download_all",
     "reprounzip_download_file",
     "reprozip_get_output_files",
-    "reprounzip_run",
+    "reprounzip_run_docker_container",
     "reprounzip_add_environment_variables",
 )

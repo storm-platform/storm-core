@@ -6,6 +6,11 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
-"""Version information for SpatioTemporal Open Research Manager."""
+"""SpatioTemporal Open Research Manager Core Graph module."""
 
-__version__ = "0.2.0"
+from .manager import VertexStatus, GraphManager
+
+__all__ = (
+    "VertexStatus",
+    "GraphManager"
+)
