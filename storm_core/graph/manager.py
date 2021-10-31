@@ -216,11 +216,6 @@ class GraphManager(object):
         """
         actual_vertex = self.search_vertex(name=name)
 
-        # Note que todas as informações que estão sendo inseridas no grafo tem uma característica comum!
-        # Elas são características que serão utilizadas para a indexação das informações! Acho que eu poderia
-        # utilizar essa ideia para armazenar essas informações em um container que tenha uma abstração
-        # maior nesse quesito!
-
         if actual_vertex:
             vertex = actual_vertex[0]
             self.update_vertex(command, environment_package, environment_package_checksum,
