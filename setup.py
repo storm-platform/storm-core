@@ -1,12 +1,12 @@
 #
-# This file is part of Brazil Data Cube Reproducible Research Management API.
+# This file is part of SpatioTemporal Open Research Manager Core.
 # Copyright (C) 2021 INPE.
 #
-# Brazil Data Cube Reproducible Research Management API is free software; you can redistribute it and/or modify it
+# SpatioTemporal Open Research Manager Core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
-"""Brazil Data Cube Reproducible Research Management CLI."""
+"""SpatioTemporal Open Research Manager Core."""
 
 import os
 
@@ -89,12 +89,12 @@ install_requires = [*base_dependencies, *processing_dependencies, *graph_depende
 packages = find_packages()
 
 g = {}
-with open(os.path.join('bdcrrm_api', 'version.py'), 'rt') as fp:
+with open(os.path.join('storm_core', 'version.py'), 'rt') as fp:
     exec(fp.read(), g)
     version = g['__version__']
 
 setup(
-    name='bdcrrm_api',
+    name='storm_core',
     version=version,
     description=__doc__,
     long_description=readme + '\n\n' + history,
@@ -105,19 +105,14 @@ setup(
     author_email='brazildatacube@inpe.br',
     url='https://github.com/brazil-data-cube/bdcrrm-api',
     project_urls={
-        'Repository': 'https://github.com/brazil-data-cube/bdcrrm-api',
-        'Issues': 'https://github.com/brazil-data-cube/bdcrrm-api/issues',
-        'Documentation': 'https://bdcrrm_api.readthedocs.io/en/latest/'
+        'Repository': 'https://github.com/brazil-data-cube/storm-core',
+        'Issues': 'https://github.com/brazil-data-cube/storm-core/issues',
+        'Documentation': 'https://storm-core.readthedocs.io/en/latest/'
     },
     packages=packages,
     zip_safe=False,
     include_package_data=True,
     platforms='any',
-    entry_points={
-        'console_scripts': [
-            'bdcrrm-cli = bdcrrm_api.cli.cli:bdcrrm_cli'
-        ]
-    },
     extras_require=extras_require,
     install_requires=install_requires,
     setup_requires=setup_requires,
