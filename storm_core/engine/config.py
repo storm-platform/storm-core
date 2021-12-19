@@ -1,10 +1,9 @@
+# -*- coding: utf-8 -*-
 #
-# This file is part of SpatioTemporal Open Research Manager Core.
-# Copyright (C) 2021 INPE.
+# Copyright (C) 2021 Storm Project.
 #
-# SpatioTemporal Open Research Manager Core is free software; you can redistribute it and/or modify it
+# storm-core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
-#
 
 """Execution engine configurations."""
 
@@ -13,7 +12,6 @@ from .executor.backends.base import GraphExecutor
 
 
 class ExecutionEngineServicesConfig:
-
     def __init__(self, graph_executor: GraphExecutor):
         self._graph_executor = graph_executor
 
@@ -23,13 +21,14 @@ class ExecutionEngineServicesConfig:
 
 
 class ExecutionEngineFilesConfig:
-
-    def __init__(self,
-                 data_storage,
-                 ignored_objects,
-                 working_directory,
-                 environment_variables_to_remove: List[str] = [],
-                 algorithm_checksum_files: str = "md5"):
+    def __init__(
+        self,
+        working_directory,
+        data_storage={},
+        ignored_objects={},
+        environment_variables_to_remove: List[str] = [],
+        algorithm_checksum_files: str = "md5",
+    ):
         self._working_directory = working_directory
 
         self._data_storage = data_storage
@@ -61,5 +60,5 @@ class ExecutionEngineFilesConfig:
 
 __all__ = (
     "ExecutionEngineFilesConfig",
-    "ExecutionEngineServicesConfig"
+    "ExecutionEngineServicesConfig",
 )

@@ -11,7 +11,6 @@ from ..graph.index.indexer import ExecutionIndexer
 
 
 class PipelineServicesAccessor:
-
     def __init__(self, graph_manager, execution_engine):
         self._graph_manager = graph_manager
         self._execution_engine = execution_engine
@@ -25,6 +24,4 @@ class PipelineServicesAccessor:
         return ReproducibleOperations(self._execution_engine, self.index)
 
 
-__all__ = (
-    "PipelineServicesAccessor"
-)
+__all__ = "PipelineServicesAccessor"

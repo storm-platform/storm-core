@@ -1,10 +1,9 @@
+# -*- coding: utf-8 -*-
 #
-# This file is part of SpatioTemporal Open Research Manager Core.
-# Copyright (C) 2021 INPE.
+# Copyright (C) 2021 Storm Project.
 #
-# SpatioTemporal Open Research Manager Core is free software; you can redistribute it and/or modify it
+# storm-core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
-#
 
 """Graph Serializer."""
 
@@ -50,15 +49,17 @@ class JSONGraphConverter(object):
             node_mapper(node): {
                 # converting attributes to avoid type errors
                 "metadata": json.loads(json.dumps(node.attributes(), default=str))
-            } for node in graph.vs
+            }
+            for node in graph.vs
         }
 
         # add edges
         edges = [
             {
                 "source": node_mapper(graph.vs[edge.source]),
-                "target": node_mapper(graph.vs[edge.target])
-            } for edge in graph.es
+                "target": node_mapper(graph.vs[edge.target]),
+            }
+            for edge in graph.es
         ]
 
         # ToDo: Add `jsongraph/json-graph-specification` validator
@@ -67,7 +68,7 @@ class JSONGraphConverter(object):
                 "directed": graph.is_directed(),
                 "nodes": nodes if nodes else {},
                 "edges": edges if edges else [],
-                **kwargs
+                **kwargs,
             }
         }
 
@@ -110,15 +111,20 @@ class JSONGraphConverter(object):
             node_source_id = edge["source"]
             node_target_id = edge["target"]
             if attribute_as_index:
-                _filter = lambda x, attr_value: x.attributes()[attribute_as_index] == attr_value
+                _filter = (
+                    lambda x, attr_value: x.attributes()[attribute_as_index]
+                    == attr_value
+                )
 
-                node_source_id = filter(functools.partial(_filter, attr_value=edge["source"]), g.vs)
-                node_target_id = filter(functools.partial(_filter, attr_value=edge["target"]), g.vs)
+                node_source_id = filter(
+                    functools.partial(_filter, attr_value=edge["source"]), g.vs
+                )
+                node_target_id = filter(
+                    functools.partial(_filter, attr_value=edge["target"]), g.vs
+                )
 
             g.add_edge(node_source_id, node_target_id)
         return g
 
 
-__all__ = (
-    "JSONGraphConverter"
-)
+__all__ = "JSONGraphConverter"

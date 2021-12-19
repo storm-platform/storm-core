@@ -47,5 +47,5 @@ class ResearchPipeline:
 
 __all__ = (
     "ResearchPipeline",
-    "ExecutionCompendium"
+    "ExecutionCompendium",
 )

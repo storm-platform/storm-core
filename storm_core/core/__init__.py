@@ -11,5 +11,5 @@ from .compendium import ExecutionCompendium
 
 __all__ = (
     "ResearchPipeline",
-    "ExecutionCompendium"
+    "ExecutionCompendium",
 )

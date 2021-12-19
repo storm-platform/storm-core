@@ -11,11 +11,8 @@ from ..component import ComponentExecutor
 
 
 class MetadataBuilder(ComponentExecutor):
-
     def __init__(self, config: MetadataBuilderConfig):
         super(MetadataBuilder, self).__init__(config, ["do_metadata"])
 
 
-__all__ = (
-    "MetadataBuilder"
-)
+__all__ = "MetadataBuilder"

@@ -14,7 +14,6 @@ from ...engine.executor.api import ExecutableCommand
 
 
 class SearchAccessor:
-
     def __init__(self, execution_indexer):
         self._execution_indexer = execution_indexer
 
@@ -33,7 +32,6 @@ class IndexerSearch:
 
 
 class QuerySearch(IndexerSearch):
-
     def execution_compendium(self, **kwargs) -> List[Tuple[ExecutionCompendium, str]]:
         # searching for compendium in the graph
         compendia_vertex = self._execution_indexer.graph_manager.search_vertex(**kwargs)
@@ -42,45 +40,61 @@ class QuerySearch(IndexerSearch):
             # general definitions
             name = compendium_vertex["name"]
             metadata = compendium_vertex["metadata"]
-            metadata = {**metadata, "external_inputs_required": compendium_vertex["external_inputs_required"]}
+            metadata = {
+                **metadata,
+                "external_inputs_required": compendium_vertex[
+                    "external_inputs_required"
+                ],
+            }
 
             # compendium definition
             compendium_package = {
                 "key": compendium_vertex["environment_package"],
                 "checksum": compendium_vertex["environment_package_checksum"],
-                "algorithm": compendium_vertex["environment_package_checksum_algorithm"]
+                "algorithm": compendium_vertex[
+                    "environment_package_checksum_algorithm"
+                ],
             }
 
             # creating the executable command
             command = compendium_vertex["command"]
             split_fnc = compendium_vertex["command_config"]["split_fnc"]
-            checksum_algorithm = compendium_vertex["command_config"]["checksum_algorithm"]
+            checksum_algorithm = compendium_vertex["command_config"][
+                "checksum_algorithm"
+            ]
 
-            executable_command = ExecutableCommand(command, split_fnc, checksum_algorithm)
+            executable_command = ExecutableCommand(
+                command, split_fnc, checksum_algorithm
+            )
 
             yield (
-                ExecutionCompendium(name, executable_command, compendium_package, metadata), compendium_vertex["status"]
+                ExecutionCompendium(
+                    name, executable_command, compendium_package, metadata
+                ),
+                compendium_vertex["status"],
             )
 
 
 class FacetedIndexSearchAccessor(IndexerSearch):
-
     def outdated_execution_compendia(self):
         _graph = self._execution_indexer.graph_manager.graph
         for vertex_index in _graph.topological_sorting(mode="out"):
             vertex = _graph.vs[vertex_index]
 
             if vertex["status"] == VertexStatus.Outdated:
-                selected_vertex = list(self._execution_indexer.search.query.execution_compendium(name=vertex["name"]))
+                selected_vertex = list(
+                    self._execution_indexer.search.query.execution_compendium(
+                        name=vertex["name"]
+                    )
+                )
                 yield selected_vertex[0]  # should exists!
 
 
 __all__ = (
     # Accessor
     "SearchAccessor",
-
     # Search types
     "IndexerSearch",
     "QuerySearch",
-    "FacetedIndexSearchAccessor"
+    "FacetedIndexSearchAccessor",
 )

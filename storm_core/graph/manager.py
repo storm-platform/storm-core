@@ -1,10 +1,9 @@
+# -*- coding: utf-8 -*-
 #
-# This file is part of SpatioTemporal Open Research Manager Core.
-# Copyright (C) 2021 INPE.
+# Copyright (C) 2021 Storm Project.
 #
-# SpatioTemporal Open Research Manager Core is free software; you can redistribute it and/or modify it
+# storm-core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
-#
 
 """SpatioTemporal Open Research Manager Core Graph Manager."""
 
@@ -62,7 +61,11 @@ class GraphManager(object):
     @property
     def is_outdated(self) -> bool:
         """Return a flag indicating whether or not there are `outdated` vertices."""
-        return len(self._graph.vs.select(status=VertexStatus.Outdated)) > 0 if self._graph else False
+        return (
+            len(self._graph.vs.select(status=VertexStatus.Outdated)) > 0
+            if self._graph
+            else False
+        )
 
     @property
     def is_empty(self) -> bool:
@@ -72,12 +75,20 @@ class GraphManager(object):
     @property
     def inputs(self) -> List:
         """Return vertices inputs."""
-        return list(itertools.chain(*self._graph.vs["inputs"])) if not self.is_empty else []
+        return (
+            list(itertools.chain(*self._graph.vs["inputs"]))
+            if not self.is_empty
+            else []
+        )
 
     @property
     def outputs(self) -> List:
         """Return vertices outputs."""
-        return list(itertools.chain(*self._graph.vs["outputs"])) if not self.is_empty else []
+        return (
+            list(itertools.chain(*self._graph.vs["outputs"]))
+            if not self.is_empty
+            else []
+        )
 
     def search_vertex(self, **kwargs):
         """Search graph vertices.
@@ -120,9 +131,7 @@ class GraphManager(object):
         for vertex in self._graph.vs:
             # retrieving all possible inputs for the current vertex.
             possible_inputs = list(
-                itertools.chain(
-                    *[x["outputs"] for x in vertex.neighbors(mode="in")]
-                )
+                itertools.chain(*[x["outputs"] for x in vertex.neighbors(mode="in")])
             )
 
             # checking which inputs are already defined.
@@ -172,17 +181,19 @@ class GraphManager(object):
                         if not set(vertex_l2["inputs"]).isdisjoint(reference_outputs):
                             self._graph.add_edge(vertex_l1, vertex_l2)
 
-    def add_vertex(self,
-                   name: str,
-                   environment_package: str,
-                   environment_package_checksum: str,
-                   environment_package_checksum_algorithm: str,
-                   command: str,
-                   command_checksum: str,
-                   command_config: Dict,
-                   inputs: List[str],
-                   outputs: List[str],
-                   metadata: Dict[str, Union[Dict, List, str]]) -> None:
+    def add_vertex(
+        self,
+        name: str,
+        environment_package: str,
+        environment_package_checksum: str,
+        environment_package_checksum_algorithm: str,
+        command: str,
+        command_checksum: str,
+        command_config: Dict,
+        inputs: List[str],
+        outputs: List[str],
+        metadata: Dict[str, Union[Dict, List, str]],
+    ) -> None:
         """Add a new vertex to the execution graph.
 
         This method adds a run with its executed command information created by the ReproZip package to the graph.
@@ -218,8 +229,15 @@ class GraphManager(object):
 
         if actual_vertex:
             vertex = actual_vertex[0]
-            self.update_vertex(command, environment_package, environment_package_checksum,
-                               environment_package_checksum_algorithm, metadata, inputs, outputs)
+            self.update_vertex(
+                command,
+                environment_package,
+                environment_package_checksum,
+                environment_package_checksum_algorithm,
+                metadata,
+                inputs,
+                outputs,
+            )
         else:
             vertex = self._graph.add_vertex(
                 name=name,
@@ -234,7 +252,7 @@ class GraphManager(object):
                 command_checksum=command_checksum,
                 environment_package=environment_package,
                 environment_package_checksum=environment_package_checksum,
-                environment_package_checksum_algorithm=environment_package_checksum_algorithm
+                environment_package_checksum_algorithm=environment_package_checksum_algorithm,
             )
 
         self._rebuild_graph()
@@ -242,14 +260,16 @@ class GraphManager(object):
 
         self._define_vertices_required_inputs()
 
-    def update_vertex(self,
-                      name: str,
-                      environment_package: str,
-                      environment_package_checksum: str,
-                      environment_package_checksum_algorithm: str,
-                      metadata: Dict[str, Union[Dict, List, str]],
-                      inputs: List[str] = None,
-                      outputs: List[str] = None) -> None:
+    def update_vertex(
+        self,
+        name: str,
+        environment_package: str,
+        environment_package_checksum: str,
+        environment_package_checksum_algorithm: str,
+        metadata: Dict[str, Union[Dict, List, str]],
+        inputs: List[str] = None,
+        outputs: List[str] = None,
+    ) -> None:
         """Update a vertex from the execution graph.
 
         This method updates a previously executed execution that is already present in the execution graph.
@@ -287,24 +307,30 @@ class GraphManager(object):
                 "metadata": metadata,
                 "environment_package": environment_package,
                 "environment_package_checksum": environment_package_checksum,
-                "environment_package_checksum_algorithm": environment_package_checksum_algorithm
+                "environment_package_checksum_algorithm": environment_package_checksum_algorithm,
             }
             invalid_variables = list(
-                filter(
-                    lambda key: variables[key] is None, variables.keys()
-                )
+                filter(lambda key: variables[key] is None, variables.keys())
             )
 
             vertex_attributes = vertex.attributes()
-            vertex_attributes = {key: vertex_attributes[key] for key in variables.keys()}
+            vertex_attributes = {
+                key: vertex_attributes[key] for key in variables.keys()
+            }
 
             # check if the valid attributes differs from the old ones
-            differences = list(diff(
-                vertex_attributes, variables, ignore=invalid_variables
-            ))
+            differences = list(
+                diff(vertex_attributes, variables, ignore=invalid_variables)
+            )
 
             if differences:  # only update attributes if there are differences
-                vertex.update_attributes({k: variables[k] for k in variables.keys() if k not in invalid_variables})
+                vertex.update_attributes(
+                    {
+                        k: variables[k]
+                        for k in variables.keys()
+                        if k not in invalid_variables
+                    }
+                )
 
             vertex["status"] = VertexStatus.Updated
             vertex["updated_in"] = datetime.now()
@@ -332,7 +358,9 @@ class GraphManager(object):
 
         def _delete_neighborhood(vtx):
             """Remove all vertices subsequent to the one being removed."""
-            neighborhood = self._graph.neighborhood(vtx, mode="out", order=MAX_IGRAPH_ORDER)
+            neighborhood = self._graph.neighborhood(
+                vtx, mode="out", order=MAX_IGRAPH_ORDER
+            )
 
             # deleting all vertices (including `vertex`)
             self._graph.delete_vertices(neighborhood)
@@ -349,7 +377,4 @@ class GraphManager(object):
         self._define_vertices_required_inputs()
 
 
-__all__ = (
-    "VertexStatus",
-    "GraphManager"
-)
+__all__ = ("VertexStatus", "GraphManager")

@@ -21,7 +21,6 @@ __all__ = (
     # Command module
     #
     "ExecutableCommand",
-
     #
     # Job Module
     #
@@ -30,5 +29,5 @@ __all__ = (
     "ReproducibleJob",
     "CommandJob",
     "CompendiumJob",
-    "ExecutionPlan"
+    "ExecutionPlan",
 )

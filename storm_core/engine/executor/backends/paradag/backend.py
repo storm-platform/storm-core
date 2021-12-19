@@ -1,10 +1,9 @@
+# -*- coding: utf-8 -*-
 #
-# This file is part of SpatioTemporal Open Research Manager Core.
-# Copyright (C) 2021 INPE.
+# Copyright (C) 2021 Storm Project.
 #
-# SpatioTemporal Open Research Manager Core is free software; you can redistribute it and/or modify it
+# storm-core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
-#
 
 from typing import Callable, List
 
@@ -69,7 +68,9 @@ class ReproductionExecutor:
     reproduction (multiprocessing) of a execution graph.
     """
 
-    def __init__(self, operator_fnc: Callable, reproducible_pipeline: ExecutionPlan, **kwargs):
+    def __init__(
+        self, operator_fnc: Callable, reproducible_pipeline: ExecutionPlan, **kwargs
+    ):
         """Class initializer.
 
         Args:
@@ -96,7 +97,9 @@ class ReproductionExecutor:
 
     def execute(self, job):
         """Execute a vertex."""
-        job_result = self._operator_fnc(job, **{"previous_output_files": self._level, **self._extra_options})
+        job_result = self._operator_fnc(
+            job, **{"previous_output_files": self._level, **self._extra_options}
+        )
         self._results.append(job_result)
 
         return job_result
@@ -104,13 +107,15 @@ class ReproductionExecutor:
     def deliver(self, _, result):
         """Deliver results to descendants vertices."""
         files_dict = [*self._level, *result.execution_results["previous_output_files"]]
-        files_dict = [dict(_tuple) for _tuple in {tuple(sorted(_dict.items())) for _dict in files_dict}]
+        files_dict = [
+            dict(_tuple)
+            for _tuple in {tuple(sorted(_dict.items())) for _dict in files_dict}
+        ]
 
         self._level = files_dict
 
 
 class ParaDagBackend(GraphExecutor):
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         n_process = kwargs.get("n_process", 1)
@@ -130,12 +135,16 @@ class ParaDagBackend(GraphExecutor):
 
         # adding the graph edges
         for job in reproducible_pipeline.jobs():
-            for job_predecessor in reproducible_pipeline.job_predecessors(job.execution_id):
+            for job_predecessor in reproducible_pipeline.job_predecessors(
+                job.execution_id
+            ):
                 dag.add_edge(job_predecessor.execution_id, job.execution_id)
 
         return dag
 
-    def map_execution(self, operator_fnc: Callable, execution_plan: ExecutionPlan, **kwargs) -> List[JobResult]:
+    def map_execution(
+        self, operator_fnc: Callable, execution_plan: ExecutionPlan, **kwargs
+    ) -> List[JobResult]:
         """Make the execution graph run."""
 
         # defining the dag and the executor
@@ -143,16 +152,21 @@ class ParaDagBackend(GraphExecutor):
         executor = ReproducibleExecutor(operator_fnc, execution_plan)
 
         # run!
-        dag_run(dag, processor=self._processor_class(),
-                executor=executor,
-                selector=CustomizableSelector(self._processors_number))
+        dag_run(
+            dag,
+            processor=self._processor_class(),
+            executor=executor,
+            selector=CustomizableSelector(self._processors_number),
+        )
 
         # Extracting the results.
         # The results are extracted from the executor, since the return from
         # `dag_run` is just the reference to the processed vertices.
         return executor.results
 
-    def map_reproduction(self, operator_fnc: Callable, execution_plan: ExecutionPlan, **kwargs) -> List[JobResult]:
+    def map_reproduction(
+        self, operator_fnc: Callable, execution_plan: ExecutionPlan, **kwargs
+    ) -> List[JobResult]:
         """TODO"""
 
         # extracting extra parameters to reproduction
@@ -160,15 +174,18 @@ class ParaDagBackend(GraphExecutor):
 
         # defining the dag and the executor
         dag = self._map(execution_plan)
-        executor = ReproductionExecutor(operator_fnc, execution_plan, **reproduction_operator_options)
+        executor = ReproductionExecutor(
+            operator_fnc, execution_plan, **reproduction_operator_options
+        )
 
-        dag_run(dag, processor=self._processor_class(),
-                executor=executor,
-                selector=CustomizableSelector(self._processors_number))
+        dag_run(
+            dag,
+            processor=self._processor_class(),
+            executor=executor,
+            selector=CustomizableSelector(self._processors_number),
+        )
 
         return executor.results
 
 
-__all__ = (
-    "ParaDagBackend"
-)
+__all__ = "ParaDagBackend"

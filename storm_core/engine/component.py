@@ -1,10 +1,9 @@
+# -*- coding: utf-8 -*-
 #
-# This file is part of SpatioTemporal Open Research Manager Core.
-# Copyright (C) 2021 INPE.
+# Copyright (C) 2021 Storm Project.
 #
-# SpatioTemporal Open Research Manager Core is free software; you can redistribute it and/or modify it
+# storm-core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
-#
 
 
 from abc import ABC
@@ -12,7 +11,6 @@ from typing import List
 
 
 class ComponentExecutor(ABC):
-
     def __init__(self, config, valid_component_methods: List[str]):
         self._config = config
 
@@ -30,12 +28,12 @@ class ComponentExecutor(ABC):
 
             for valid_method in self._valid_component_methods:
                 if hasattr(component_obj, valid_method):
-                    component_result = getattr(component_obj, valid_method)(execution_compendium_path, **kwargs)
+                    component_result = getattr(component_obj, valid_method)(
+                        execution_compendium_path, **kwargs
+                    )
 
                     results = {**results, **component_result}
         return results
 
 
-__all__ = (
-    "ComponentExecutor"
-)
+__all__ = "ComponentExecutor"

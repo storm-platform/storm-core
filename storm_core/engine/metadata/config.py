@@ -1,27 +1,24 @@
+# -*- coding: utf-8 -*-
 #
-# This file is part of SpatioTemporal Open Research Manager Core.
-# Copyright (C) 2021 INPE.
+# Copyright (C) 2021 Storm Project.
 #
-# SpatioTemporal Open Research Manager Core is free software; you can redistribute it and/or modify it
+# storm-core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
-#
 
 from typing import List
 
 from .components import (
     MetadataComponent,
     IOMetadataComponent,
-    FileChecksumMetadataComponent
+    FileChecksumMetadataComponent,
 )
 
 
 class MetadataBuilderConfig:
     components: List[MetadataComponent] = [
         IOMetadataComponent,
-        FileChecksumMetadataComponent
+        FileChecksumMetadataComponent,
     ]
 
 
-__all__ = (
-    "InspectorGeneralComponent"
-)
+__all__ = "InspectorGeneralComponent"

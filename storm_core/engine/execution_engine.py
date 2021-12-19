@@ -1,10 +1,9 @@
+# -*- coding: utf-8 -*-
 #
-# This file is part of SpatioTemporal Open Research Manager Core.
-# Copyright (C) 2021 INPE.
+# Copyright (C) 2021 Storm Project.
 #
-# SpatioTemporal Open Research Manager Core is free software; you can redistribute it and/or modify it
+# storm-core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
-#
 
 from copy import deepcopy
 from typing import Dict, List
@@ -27,7 +26,11 @@ from .config import ExecutionEngineFilesConfig, ExecutionEngineServicesConfig
 class ExecutionEngine:
     """Execution Engine."""
 
-    def __init__(self, services_config: ExecutionEngineServicesConfig, files_config: ExecutionEngineFilesConfig):
+    def __init__(
+        self,
+        services_config: ExecutionEngineServicesConfig,
+        files_config: ExecutionEngineFilesConfig,
+    ):
         """Initialize execution engine."""
         self._files_config = files_config
         self._services_config = services_config
@@ -53,9 +56,11 @@ class ExecutionEngine:
         io_metadata = IOMetadataComponent().do_metadata(
             ignored_objects=self._files_config.ignored_objects,
             working_directory=self._files_config.working_directory,
-            execution_compendium_path=job_result.environment_descriptors_dir
+            execution_compendium_path=job_result.environment_descriptors_dir,
         )
-        self._states["generated_outputs"] = list({*self._states["generated_outputs"], *io_metadata["outputs"]})
+        self._states["generated_outputs"] = list(
+            {*self._states["generated_outputs"], *io_metadata["outputs"]}
+        )
 
         inspected_files = inspector.run_components(
             previous_outputs=self._states["generated_outputs"],
@@ -74,16 +79,16 @@ class ExecutionEngine:
             ignored_objects=self._files_config.ignored_objects,
             working_directory=self._files_config.working_directory,
             algorithm_checksum_files=self._files_config.checksum_algorithm,
-            execution_compendium_path=job_result.environment_descriptors_dir
+            execution_compendium_path=job_result.environment_descriptors_dir,
         )
 
         # adding removed files to the metadata
         metadata = {**metadata, "others": inspected_files}
 
-        job_result.execution_results = {**job_result.execution_results, **{
-            "compendium_package": package_file,
-            "metadata": metadata
-        }}
+        job_result.execution_results = {
+            **job_result.execution_results,
+            **{"compendium_package": package_file, "metadata": metadata},
+        }
 
         return job_result
 
@@ -117,12 +122,16 @@ class ExecutionEngine:
             None: The execution information is saved directly in the execution graph.  TODO
         """
 
-        return self._services_config.graph_executor.map_execution(self._operator_execution, execution_plan)
+        return self._services_config.graph_executor.map_execution(
+            self._operator_execution, execution_plan
+        )
 
-    def reproduce(self,
-                  execution_plan: ExecutionPlan,
-                  required_data_objects: Dict = {},
-                  required_environment_variables: List[str] = []) -> List[JobResult]:
+    def reproduce(
+        self,
+        execution_plan: ExecutionPlan,
+        required_data_objects: Dict = {},
+        required_environment_variables: List[str] = [],
+    ) -> List[JobResult]:
         """Reproduce each of the operations of the execution graph in an isolated environment.
 
         Args:
@@ -158,14 +167,11 @@ class ExecutionEngine:
         return self._services_config.graph_executor.map_reproduction(
             self._operator_reproduce,
             execution_plan,
-
             fnc_options=dict(
                 required_data_objects=required_data_objects,
-                required_environment_variables=required_environment_variables
-            )
+                required_environment_variables=required_environment_variables,
+            ),
         )
 
 
-__all__ = (
-    "ExecutionEngine"
-)
+__all__ = "ExecutionEngine"

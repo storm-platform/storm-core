@@ -1,10 +1,9 @@
+# -*- coding: utf-8 -*-
 #
-# This file is part of SpatioTemporal Open Research Manager Core.
-# Copyright (C) 2021 INPE.
+# Copyright (C) 2021 Storm Project.
 #
-# SpatioTemporal Open Research Manager Core is free software; you can redistribute it and/or modify it
+# storm-core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
-#
 
 from typing import List, Union
 from collections import Callable
@@ -14,8 +13,12 @@ from storm_hasher import StormHasher
 
 
 class ExecutableCommand:
-    def __init__(self, command: Union[str, List], split_fnc: Callable = lambda x: x.split(" "),
-                 checksum_algorithm="sha256"):
+    def __init__(
+        self,
+        command: Union[str, List],
+        split_fnc: Callable = lambda x: x.split(" "),
+        checksum_algorithm="sha256",
+    ):
         _cmd = command
         if isinstance(command, str):
             _cmd = split_fnc(command)
@@ -90,5 +93,5 @@ class ExecutionPlan:
 
 __all__ = (
     "ExecutionPlan",
-    "ExecutableCommand"
+    "ExecutableCommand",
 )
