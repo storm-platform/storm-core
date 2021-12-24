@@ -1,10 +1,9 @@
+# -*- coding: utf-8 -*-
 #
-# This file is part of SpatioTemporal Open Research Manager Core.
-# Copyright (C) 2021 INPE.
+# Copyright (C) 2021 Storm Project.
 #
-# SpatioTemporal Open Research Manager Core is free software; you can redistribute it and/or modify it
+# storm-core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
-#
 
 from typing import List, Dict
 
@@ -47,7 +46,7 @@ class ReproducibleOperations:
             for ec in execution_job_results
         ]
 
-    def rerun(self, reproducible_storage):
+    def rerun(self):
         _graph = self._execution_indexer.graph_manager.graph
 
         # preparing the outdated compendia that will be executed
@@ -59,7 +58,9 @@ class ReproducibleOperations:
         # mutating graph to execution plan
         execution_plan = (
             GraphMutator.mutate_graph_to_execution_plan_by_outdated_compendia(
-                _graph, outdated_compendia, reproducible_storage
+                _graph,
+                outdated_compendia,
+                self._execution_engine.files_config.storage_dir,
             )
         )
 
@@ -84,8 +85,8 @@ class ReproducibleOperations:
     def reproduce(
         self,
         reproducible_storage: str,
-        required_data_objects: Dict = {},
-        required_environment_variables: List[str] = [],
+        required_data_objects: Dict = None,
+        required_environment_variables: List[str] = None,
     ):
         """"""
         self._check_outdated_executions()
@@ -101,7 +102,9 @@ class ReproducibleOperations:
 
         # reproducing
         self._execution_engine.reproduce(
-            execution_plan, required_data_objects, required_environment_variables
+            execution_plan,
+            required_data_objects or {},
+            required_environment_variables or [],
         )
 
 

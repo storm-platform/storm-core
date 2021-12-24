@@ -17,7 +17,7 @@ def hash_file(file_path: Union[str, Path], algorithm: str = "md5"):
     return {"key": file_path, "algorithm": algorithm, "checksum": hash_digest}
 
 
-def check_checksum(
+def validate_checksum(
     file_path: Union[str, Path], expected_checksum, algorithm: str = "md5"
 ):
     file_hash_digest = hash_file(file_path, algorithm).get("checksum")
@@ -26,4 +26,4 @@ def check_checksum(
         raise RuntimeError(f"Invalid checksum for {file_path}!")
 
 
-__all__ = ("hash_file", "check_checksum")
+__all__ = ("hash_file", "validate_checksum")
