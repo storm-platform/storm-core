@@ -6,6 +6,8 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 from itertools import chain
+from functools import reduce
+
 from typing import Callable, List
 
 import ray
@@ -28,7 +30,6 @@ class RayBackend(GraphExecutor):
         is_reproduction=False,
         **kwargs
     ):
-
         reproduction_options = {}
         if is_reproduction:
             reproduction_options = kwargs.get("fnc_options", {})
@@ -86,19 +87,18 @@ class RayBackend(GraphExecutor):
 
             # extracting some information from dependencies result
             if dependencies:
+                dependencies = reduce(lambda x, y: x + y, dependencies)
                 for dependency in dependencies:
                     previous_output_files.extend(
                         dependency.execution_results.get("previous_output_files", [])
                     )
-
-                previous_output_files = list(set(previous_output_files))
 
             # running the operator
             operator_result = operator(
                 job,
                 **{"previous_output_files": previous_output_files, **extra_parameters}
             )
-            return [*[operator_result], *list(chain(*dependencies))]
+            return dependencies + [operator_result]
 
         return self._map_operator(do_reproduction_job, execution_plan, True, **kwargs)
 

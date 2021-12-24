@@ -6,14 +6,15 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 import os
+import uuid
 import shutil
-from abc import ABC, abstractmethod
+
 from tempfile import mkdtemp
 from typing import List, Dict
 
-import base32_lib as base32
+from abc import ABC, abstractmethod
 
-from ....helper.hasher import check_checksum, hash_file
+from ....helper.hasher import validate_checksum, hash_file
 from ....reprozip import (
     reprozip_execute_script,
     reprounzip_setup,
@@ -35,7 +36,7 @@ class JobResult:
         execution_id: str,
         status: bool,
         message: str,
-        environment_descriptors_dir=None,
+        environment_description_data=None,
         command=None,
         **execution_results,
     ):
@@ -43,7 +44,7 @@ class JobResult:
         self._message = message
         self._command = command
         self._execution_id = execution_id
-        self._environment_descriptors_dir = environment_descriptors_dir
+        self._environment_description_data = environment_description_data
 
         self._execution_results = execution_results
 
@@ -64,8 +65,8 @@ class JobResult:
         return self._execution_id
 
     @property
-    def environment_descriptors_dir(self):
-        return self._environment_descriptors_dir  # ToDo: Improve the abstraction
+    def environment_description_data(self):
+        return self._environment_description_data  # ToDo: Improve the abstraction
 
     @property
     def execution_results(self):
@@ -87,24 +88,27 @@ class ReproducibleJob(ABC):
     def command(self):
         pass
 
+    @abstractmethod
+    def submit(self, **kwargs) -> JobResult:
+        pass
+
     @property
     @abstractmethod
     def output_directory(self):
         pass
 
+    @output_directory.setter
     @abstractmethod
-    def submit(self, **kwargs) -> JobResult:
+    def output_directory(self, value):
         pass
 
 
 class CommandJob(ReproducibleJob):
-    def __init__(self, command, output_directory: str, execution_id=None):
-        self._execution_id = execution_id or base32.generate(
-            length=10, split_every=0, checksum=True
-        )
+    def __init__(self, command, output_directory: str = None, execution_id=None):
+        self._execution_id = execution_id or str(uuid.uuid4())
 
         self._command = command
-        self._output_directory = output_directory
+        self._output_directory = output_directory or ""
 
     @property
     def execution_id(self):
@@ -118,6 +122,10 @@ class CommandJob(ReproducibleJob):
     def output_directory(self):
         return os.path.join(self._output_directory, self._execution_id)
 
+    @output_directory.setter
+    def output_directory(self, value):
+        self._output_directory = value
+
     def submit(self, **kwargs) -> JobResult:
         message = "Successfully Finished!"
         job_status = JobStatus.SUCCESSFULLY
@@ -127,8 +135,8 @@ class CommandJob(ReproducibleJob):
         try:
             execution_compendium_directory = reprozip_execute_script(
                 self.output_directory,
-                self._command.binary_executor,
-                self._command.command,
+                self.command.binary_executor,
+                self.command.command,
             )
         except RuntimeError as error:
             error = str(error)
@@ -162,6 +170,10 @@ class CompendiumJob(ReproducibleJob):
     def output_directory(self):
         return os.path.join(self._output_directory, self.execution_id)
 
+    @output_directory.setter
+    def output_directory(self, value):
+        self._output_directory = value
+
     def submit(self, **kwargs) -> JobResult:
         """Execute the operations for experiment reproduction.
 
@@ -186,7 +198,7 @@ class CompendiumJob(ReproducibleJob):
         job_status = JobStatus.SUCCESSFULLY
 
         # retrieving inputs
-        required_data_objects = kwargs.get("required_data_objects", [])
+        required_data_objects = kwargs.get("required_data_objects", {})
         previous_output_files = kwargs.get("previous_output_files", [])
         required_environment_variables = kwargs.get(
             "required_environment_variables", []
@@ -194,7 +206,7 @@ class CompendiumJob(ReproducibleJob):
 
         # validating the package checksum
         compendium_package = self._compendium.compendium_package
-        check_checksum(
+        validate_checksum(
             compendium_package["key"],
             compendium_package["checksum"],
             compendium_package["algorithm"],

@@ -10,76 +10,100 @@ from typing import Dict, List
 
 from ..helper.hasher import hash_file
 
-from .inspector.inspector import Inspector
-from .inspector.config import InspectorConfig
+from .component.inspector.inspector import Inspector
+from .component.metadata.builder import MetadataBuilder
 
-from .metadata.builder import MetadataBuilder
-from .metadata.config import MetadataBuilderConfig
-from .metadata.components import IOMetadataComponent
+from .component.decorator import pass_component_executor
 
-from ..reprozip import reprozip_pack_execution
 from .executor.api import ReproducibleJob, ExecutionPlan, JobResult
-
+from ..reprozip import reprozip_pack_execution, reprozip_execution_metadata
 from .config import ExecutionEngineFilesConfig, ExecutionEngineServicesConfig
 
 
 class ExecutionEngine:
-    """Execution Engine."""
+    """Execution Engine class.
 
+    The ``Execution Engine`` provides methods to run,
+    rerun and reproduce user commands.
+    """
+
+    @pass_component_executor("inspector", Inspector)
+    @pass_component_executor("builder", MetadataBuilder)
     def __init__(
         self,
         services_config: ExecutionEngineServicesConfig,
         files_config: ExecutionEngineFilesConfig,
+        inspector: Inspector = None,
+        builder: MetadataBuilder = None,
     ):
-        """Initialize execution engine."""
+        """Initializer.
+
+        Args:
+            services_config (ExecutionEngineServicesConfig): Configuration of the services used by the Execution Engine.
+
+            files_config (ExecutionEngineFilesConfig): Files definitions used by the Execution Engine.
+
+            inspector (Inspector): Component executor to handle and modify the data in the reproducible bundle.
+
+            builder (MetadataBuilder): Component executor to build the execution metadata from the Job Results metadata
+            and the reproducible bundle files.
+        """
         self._files_config = files_config
         self._services_config = services_config
+
+        # Component executors
+        self._builder = builder
+        self._inspector = inspector
 
         self._states = {"generated_outputs": []}
 
     @property
     def files_config(self):
+        """Execution engine files configurations."""
         return deepcopy(self._files_config)  # "read-only"
 
     @property
     def services_config(self):
+        """Execution engine services configurations."""
         return deepcopy(self._services_config)  # "read-only"
 
-    def _operator_execution(self, job, **kwargs) -> JobResult:
+    def _operator_run(self, job, **kwargs) -> JobResult:
+        # configuring the job
+        job.output_directory = self._files_config.storage_dir
+
         # executing
         job_result = job.submit()
 
-        # inspecting the files, environment variables and other things from the execution result
-        inspector = Inspector(InspectorConfig)
-
         # extracting output files
-        io_metadata = IOMetadataComponent().do_metadata(
-            ignored_objects=self._files_config.ignored_objects,
-            working_directory=self._files_config.working_directory,
-            execution_compendium_path=job_result.environment_descriptors_dir,
-        )
-        self._states["generated_outputs"] = list(
-            {*self._states["generated_outputs"], *io_metadata["outputs"]}
+        execution_io_files = reprozip_execution_metadata(
+            job_result.environment_description_data,
+            self._files_config.working_directory,
+            self._files_config.ignored_data_objects,
         )
 
-        inspected_files = inspector.run_components(
-            previous_outputs=self._states["generated_outputs"],
-            data_directories=self._files_config.data_storage,
-            execution_compendium_path=job_result.environment_descriptors_dir,
-            environment_variables_to_remove=self._files_config.environment_variables_to_remove,
+        self._states["generated_outputs"] = list(
+            {*self._states["generated_outputs"], *execution_io_files["outputs"]}
+        )
+
+        # inspecting the files, environment variables
+        # and other things from the execution result.
+        inspected_files = self._inspector.run_components(
+            states=self._states,
+            job_result=job_result,
+            files_config=self._files_config,
         )
 
         # packing the files
-        package_file = reprozip_pack_execution(job_result.environment_descriptors_dir)
-        package_file = hash_file(package_file, self._files_config.checksum_algorithm)
+        package_file = reprozip_pack_execution(job_result.environment_description_data)
+        package_file = hash_file(
+            package_file, self._files_config.files_checksum_algorithm
+        )
 
         # generating the full execution metadata
-        metadata_builder = MetadataBuilder(MetadataBuilderConfig)
-        metadata = metadata_builder.run_components(
-            ignored_objects=self._files_config.ignored_objects,
-            working_directory=self._files_config.working_directory,
-            algorithm_checksum_files=self._files_config.checksum_algorithm,
-            execution_compendium_path=job_result.environment_descriptors_dir,
+        metadata = self._builder.run_components(
+            states=self._states,
+            job_result=job_result,
+            files_config=self._files_config,
         )
 
         # adding removed files to the metadata
@@ -92,7 +116,7 @@ class ExecutionEngine:
 
         return job_result
 
-    def _operator_reproduce(self, job: ReproducibleJob, **kwargs) -> JobResult:
+    def _operator_rerun(self, job: ReproducibleJob, **kwargs) -> JobResult:
         """Execute the operations for experiment reproduction.
 
         Args: TODO
@@ -123,14 +147,14 @@ class ExecutionEngine:
         """
 
         return self._services_config.graph_executor.map_execution(
-            self._operator_execution, execution_plan
+            self._operator_run, execution_plan
         )
 
     def reproduce(
         self,
         execution_plan: ExecutionPlan,
-        required_data_objects: Dict = {},
-        required_environment_variables: List[str] = [],
+        required_data_objects: Dict = None,
+        required_environment_variables: List[str] = None,
     ) -> List[JobResult]:
         """Reproduce each of the operations of the execution graph in an isolated environment.
 
@@ -165,13 +189,10 @@ class ExecutionEngine:
             None: The reproduction result will be saved on the current directory.
         """
         return self._services_config.graph_executor.map_reproduction(
-            self._operator_reproduce,
+            self._operator_rerun,
             execution_plan,
             fnc_options=dict(
-                required_data_objects=required_data_objects,
-                required_environment_variables=required_environment_variables,
+                required_data_objects=required_data_objects or {},
+                required_environment_variables=required_environment_variables or [],
             ),
         )
-
-
-__all__ = "ExecutionEngine"
