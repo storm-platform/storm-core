@@ -6,6 +6,9 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 import os
+import yaml
+
+from pathlib import Path
 
 from igraph import Graph
 from typing import Dict, List, Union
@@ -284,3 +287,23 @@ class StormfileParser:
 
                         g.add_edge(dependency_vertex, command_vertex)
         return ExecutionPlan(g)
+
+
+def load_stormfile(stormfile_path: Union[str, Path]) -> ExecutionPlan:
+    """Function to parse a Stormfile in a ExecutionPlan.
+
+    Args:
+        stormfile_path (Union[str, Path]): Path to the Stormfile.
+
+    Returns:
+        ExecutionPlan: ExecutionPlan object..
+    """
+
+    stormfile_path = Path(stormfile_path)
+    if not stormfile_path.is_file():
+        raise FileNotFoundError(f"Stormfile not found in {stormfile_path}")
+
+    with open(stormfile_path, "r") as ifile:
+        storm_file = yaml.load(ifile, yaml.Loader)
+
+        return StormfileParser.parse(storm_file)
