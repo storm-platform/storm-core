@@ -16,6 +16,7 @@ storm-hasher = { git = "https://github.com/storm-platform/storm-hasher.git" }
 ray = { version = "^1.9.0", optional = true }
 paradag = { version = "^1.2.0", optional = true }
 "ruamel.yaml" = "^0.17.17"
+dill = "^0.3.4"
 
 [tool.poetry.extras]
 ray-backend = ["ray"]
