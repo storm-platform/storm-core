@@ -198,7 +198,11 @@ def _extract_execution_input(
         if working_directory in input_output_file["path"] and not is_ignored:
             # verify if file is a input (written by nobody - ReproZip heuristic)
             if len(input_output_file["written_by_runs"]) == 0:
-                inputs.append(input_output_file)
+                if (
+                    input_output_file["path"]
+                    != reprozip_execution_config["runs"][0]["binary"]
+                ):
+                    inputs.append(input_output_file)
     return inputs
 
 
@@ -219,35 +223,6 @@ def _extract_execution_output(reprozip_execution_config: Dict) -> List[Dict]:
         if len(input_output_file["written_by_runs"]) != 0:
             outputs.append(input_output_file)
     return outputs
-
-
-def _extract_command(reprozip_execution_config: Dict) -> List[str]:
-    """Extract the execution command.
-
-    Args:
-        reprozip_execution_config (Dict): The ReproZip execution metadata (`config.yml`) dict object.
-
-    Returns:
-        List[str]: The execution command.
-    """
-    # in storm-core, the reprozip execution strategy always generate a unique execution per command
-    return reprozip_execution_config["runs"][0]["argv"]
-
-
-def _remove_command_from_input(command: List[str], input_files: List[str]) -> List[str]:
-    """Remove the executed command from the variables considered as input.
-
-    Args:
-        command (List[str]): The execution command.
-
-        input_files: The execution input files filtered by working directory.
-
-    Returns:
-        List[Dict]: The execution input files filtered without command (as soon as possible).
-    """
-    return [
-        x for x in input_files if all(os.path.basename(x) not in c for c in command)
-    ]
 
 
 def _check_empty_environment_variable(reprozip_bundle_directory: str) -> None:
@@ -381,23 +356,16 @@ def reprozip_execution_metadata(
 
     reprozip_execution_config = _load_reprozip_config_file(reprozip_bundle_directory)
 
-    # extract values
-    command = _extract_command(reprozip_execution_config)
-
-    # in the case of input, the script is also removed
-    inputs = _remove_command_from_input(
-        command,
-        _extract_path(
-            _extract_execution_input(
-                reprozip_execution_config, working_directory, ignored_objects
-            )
-        ),
+    # extract input/output.
+    inputs = _extract_path(
+        _extract_execution_input(
+            reprozip_execution_config, working_directory, ignored_objects
+        )
     )
 
     outputs = _extract_path(_extract_execution_output(reprozip_execution_config))
 
     return {
-        # "command": command,
         "inputs": inputs,
         "outputs": outputs,
     }
