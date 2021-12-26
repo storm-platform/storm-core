@@ -135,7 +135,7 @@ class ExecutionEngineFilesConfig:
 
         # creating the defined directories
         self._storage_dir.mkdir(exist_ok=True, parents=True)
-        self._storage_dir.mkdir(exist_ok=True, parents=True)
+        self._working_directory.mkdir(exist_ok=True, parents=True)
 
     @property
     def working_directory(self):

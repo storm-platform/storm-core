@@ -63,13 +63,16 @@ class InspectorFileRemoverComponent(InspectorComponent):
         self, job_result=None, states=None, files_config=None, **kwargs
     ):
         """Inspect and change the compendium data files."""
-        previous_output = states["generated_outputs"]
+        previous_outputs = states["previous_outputs"]
         data_directories = files_config.data_objects
 
         execution_compendium_path = job_result.environment_description_data
 
         files_not_packaged = filter_reprozip_config_files(
-            execution_compendium_path, data_directories, previous_output
+            execution_compendium_path,
+            data_directories,
+            previous_outputs,
+            checksum_algorithm=files_config.files_checksum_algorithm,
         )
         return {"unpacked_files": files_not_packaged}
 

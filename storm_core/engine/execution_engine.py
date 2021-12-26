@@ -6,7 +6,7 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 from copy import deepcopy
-from typing import Dict, List
+from typing import Dict, List, Callable
 
 from ..helper.hasher import hash_file
 
@@ -55,8 +55,6 @@ class ExecutionEngine:
         self._builder = builder
         self._inspector = inspector
 
-        self._states = {"generated_outputs": []}
-
     @property
     def files_config(self):
         """Execution engine files configurations."""
@@ -67,54 +65,63 @@ class ExecutionEngine:
         """Execution engine services configurations."""
         return deepcopy(self._services_config)  # "read-only"
 
-    def _operator_run(self, job, **kwargs) -> JobResult:
-        # configuring the job
-        job.output_directory = self._files_config.storage_dir
+    def _operator_run(self, states: Dict, **kwargs) -> Callable:
+        """Clojure function to produce a function that executes User-Defined Commands.
 
-        # executing
-        job_result = job.submit()
+        Args:
+            states (Dict): Dict with the current execution states (e.g., Previous generated files).
 
-        # extracting output files
-        execution_io_files = reprozip_execution_metadata(
-            job_result.environment_description_data,
-            self._files_config.working_directory,
-            self._files_config.ignored_data_objects,
-        )
+        Note:
+            This function produces a closure to store the execution states and makes them available to the
+            execution components (Inspector and Metadata Builder) and other functions.
 
-        self._states["generated_outputs"] = list(
-            {*self._states["generated_outputs"], *execution_io_files["outputs"]}
-        )
+        Returns:
+            Callable: Function to execute the User-Defined Command.
+        """
 
-        # inspecting the files, environment variables
-        # and other things from the execution result.
-        inspected_files = self._inspector.run_components(
-            states=self._states,
-            job_result=job_result,
-            files_config=self._files_config,
-        )
+        def _wrapper(job, **kwargs) -> JobResult:
+            """Function to execute the User-Defined Command."""
 
-        # packing the files
-        package_file = reprozip_pack_execution(job_result.environment_description_data)
-        package_file = hash_file(
-            package_file, self._files_config.files_checksum_algorithm
-        )
+            # configuring the job
+            job.output_directory = self._files_config.storage_dir
 
-        # generating the full execution metadata
-        metadata = self._builder.run_components(
-            states=self._states,
-            job_result=job_result,
-            files_config=self._files_config,
-        )
+            # executing
+            job_result = job.submit()
 
-        # adding removed files to the metadata
-        metadata = {**metadata, "others": inspected_files}
+            # inspecting the files, environment variables
+            # and other things from the execution result.
+            inspected_files = self._inspector.run_components(
+                states=states,
+                job_result=job_result,
+                files_config=self._files_config,
+            )
 
-        job_result.execution_results = {
-            **job_result.execution_results,
-            **{"compendium_package": package_file, "metadata": metadata},
-        }
+            # packing the files
+            package_file = reprozip_pack_execution(
+                job_result.environment_description_data
+            )
+            package_file = hash_file(
+                package_file, self._files_config.files_checksum_algorithm
+            )
 
-        return job_result
+            # generating the full execution metadata
+            metadata = self._builder.run_components(
+                states=states,
+                job_result=job_result,
+                files_config=self._files_config,
+            )
+
+            # adding removed files to the metadata
+            metadata = {**metadata, "others": inspected_files}
+
+            job_result.execution_results = {
+                **job_result.execution_results,
+                **{"compendium_package": package_file, "metadata": metadata},
+            }
+
+            return job_result
+
+        return _wrapper
 
     def _operator_rerun(self, job: ReproducibleJob, **kwargs) -> JobResult:
         """Execute the operations for experiment reproduction.
@@ -136,18 +143,19 @@ class ExecutionEngine:
         """
         return job.submit(**kwargs)
 
-    def execute(self, execution_plan: ExecutionPlan) -> List[JobResult]:
+    def execute(self, execution_plan: ExecutionPlan, states=None) -> List[JobResult]:
         """Execute a User Defined Command with ReproZip Trace System.
 
         Args:
             execution_plan (ExecutionPlan): User Defined Command that will be executed and registered. TODO
 
+            states (Dict): Dict with the current execution states (e.g., Previous generated files).
+
         Returns:
             None: The execution information is saved directly in the execution graph.  TODO
         """
-
         return self._services_config.graph_executor.map_execution(
-            self._operator_run, execution_plan
+            self._operator_run(states), execution_plan
         )
 
     def reproduce(

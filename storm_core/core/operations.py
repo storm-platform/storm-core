@@ -32,7 +32,12 @@ class ReproducibleOperations:
 
     def execute(self, execution_plan: ExecutionPlan):
         self._check_outdated_executions()
-        execution_job_results = self._execution_engine.execute(execution_plan)
+
+        # Searching for previous output files (checksum)
+        previous_output_checksum = self._execution_indexer.graph_manager.outputs
+        execution_job_results = self._execution_engine.execute(
+            execution_plan, states={"previous_outputs": previous_output_checksum}
+        )
 
         return [
             self._execution_indexer.index_execution(
