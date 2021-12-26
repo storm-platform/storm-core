@@ -20,7 +20,8 @@ from reprozip.pack import pack
 from reprozip.tracer import trace
 from rpaths import Path
 from ruamel.yaml import YAML
-from storm_hasher import StormHasher
+
+from .helper.hasher import hash_file
 
 
 def _generate_uuid() -> str:
@@ -101,8 +102,6 @@ def _exclude_execution_input_files_by_already_generated_files(
         The filtering is done in the `other_files` section of the ReproZip configuration file. Thus, the reference to
         which input data should be used is still kept in the file.
     """
-    hasher = StormHasher(checksum_algorithm)
-
     excluded_files = []
     for already_generated_file in already_generated_files:
         for idx, other_file in enumerate(reprozip_execution_config["other_files"]):
@@ -110,7 +109,8 @@ def _exclude_execution_input_files_by_already_generated_files(
             if (
                 other_file
                 and os.path.isfile(other_file)
-                and already_generated_file == hasher.hash_file(other_file)
+                and already_generated_file
+                == hash_file(other_file, checksum_algorithm).get("checksum")
             ):
                 excluded_files.append(reprozip_execution_config["other_files"][idx])
                 reprozip_execution_config["other_files"][idx] = None
