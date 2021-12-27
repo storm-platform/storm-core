@@ -32,18 +32,12 @@
 About
 =====
 
-Storm Core is a Python library that provides features to reproducible research development.
+Python library to create, manage and reproduce scientific analyses.
 
 Installation
 ============
 
 See `INSTALL.rst <./INSTALL.rst>`_.
-
-
-Using Storm Core in the Command Line
-=====================================
-
-See `CLI.rst <./CLI.rst>`_.
 
 
 Developer Documentation
