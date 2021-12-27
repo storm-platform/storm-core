@@ -6,7 +6,7 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 from .inspector import InspectorConfig, Inspector
-from .components import InspectorComponent, InspectorFileRemoverComponent
+from .component import InspectorComponent, InspectorFileRemoverComponent
 
 
 __all__ = (

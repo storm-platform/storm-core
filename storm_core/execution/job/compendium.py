@@ -6,151 +6,22 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 import os
-import uuid
 import shutil
-
 from tempfile import mkdtemp
-from typing import List, Dict
 
-from abc import ABC, abstractmethod
+from ...helper.hasher import (
+    validate_checksum,
+    hash_file,
+)
 
-from ....helper.hasher import validate_checksum, hash_file
-from ....reprozip import (
-    reprozip_execute_script,
-    reprounzip_setup,
+from ...reprozip import (
     reprounzip_add_environment_variables,
+    reprounzip_setup,
     reprounzip_run_docker_container,
     reprozip_get_output_files,
     reprounzip_download_file,
 )
-
-
-class JobStatus:
-    ERROR = False
-    SUCCESSFULLY = True
-
-
-class JobResult:
-    def __init__(
-        self,
-        execution_id: str,
-        status: bool,
-        message: str,
-        environment_description_data=None,
-        command=None,
-        **execution_results,
-    ):
-        self._status = status
-        self._message = message
-        self._command = command
-        self._execution_id = execution_id
-        self._environment_description_data = environment_description_data
-
-        self._execution_results = execution_results
-
-    @property
-    def execution_message(self):
-        return self._message
-
-    @property
-    def command(self):
-        return self._command
-
-    @property
-    def has_error(self):
-        return not self._status
-
-    @property
-    def execution_id(self):
-        return self._execution_id
-
-    @property
-    def environment_description_data(self):
-        return self._environment_description_data  # ToDo: Improve the abstraction
-
-    @property
-    def execution_results(self):
-        return self._execution_results
-
-    @execution_results.setter
-    def execution_results(self, results: Dict):
-        self._execution_results = results
-
-
-class ReproducibleJob(ABC):
-    @property
-    @abstractmethod
-    def execution_id(self):
-        pass
-
-    @property
-    @abstractmethod
-    def command(self):
-        pass
-
-    @abstractmethod
-    def submit(self, **kwargs) -> JobResult:
-        pass
-
-    @property
-    @abstractmethod
-    def output_directory(self):
-        pass
-
-    @output_directory.setter
-    @abstractmethod
-    def output_directory(self, value):
-        pass
-
-
-class CommandJob(ReproducibleJob):
-    def __init__(self, command, output_directory: str = None, execution_id=None):
-        self._execution_id = execution_id or str(uuid.uuid4())
-
-        self._command = command
-        self._output_directory = output_directory or ""
-
-    @property
-    def execution_id(self):
-        return self._execution_id
-
-    @property
-    def command(self):
-        return self._command
-
-    @property
-    def output_directory(self):
-        return os.path.join(self._output_directory, self._execution_id)
-
-    @output_directory.setter
-    def output_directory(self, value):
-        self._output_directory = value
-
-    def submit(self, **kwargs) -> JobResult:
-        message = "Successfully Finished!"
-        job_status = JobStatus.SUCCESSFULLY
-
-        execution_compendium_directory = None
-
-        try:
-            execution_compendium_directory = reprozip_execute_script(
-                self.output_directory,
-                self.command.binary_executor,
-                self.command.command,
-            )
-        except RuntimeError as error:
-            error = str(error)
-
-            job_status = JobStatus.ERROR
-            message = f"An error occurred when running the job: {error}"
-
-        return JobResult(
-            self._execution_id,
-            job_status,
-            message,
-            execution_compendium_directory,
-            self._command,
-        )
+from .base import ReproducibleJob, JobResult, JobStatus
 
 
 class CompendiumJob(ReproducibleJob):
@@ -356,12 +227,3 @@ class CompendiumJob(ReproducibleJob):
             previous_output_files=previous_output_files,
             compendium=self._compendium,
         )
-
-
-__all__ = (
-    "JobStatus",
-    "JobResult",
-    "ReproducibleJob",
-    "CommandJob",
-    "CompendiumJob",
-)

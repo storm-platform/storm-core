@@ -45,7 +45,6 @@ class BaseComponentExecutor(ABC):
 
         Args:
             kwargs: Arguments to the executed components.
-
         """
         results = {}
         for component_cls in self.config.components:
@@ -57,6 +56,3 @@ class BaseComponentExecutor(ABC):
                     component_result = getattr(component_obj, valid_method)(**kwargs)
                     results = {**results, **component_result}
         return results
-
-
-__all__ = "BaseComponentExecutor"

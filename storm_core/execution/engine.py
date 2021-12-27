@@ -9,15 +9,22 @@ from copy import deepcopy
 from typing import Dict, List, Callable
 
 from ..helper.hasher import hash_file
+from ..reprozip import reprozip_pack_execution
 
+from .plan import ExecutionPlan
 from .component.inspector.inspector import Inspector
 from .component.metadata.builder import MetadataBuilder
-
 from .component.decorator import pass_component_executor
 
-from .executor.api import ReproducibleJob, ExecutionPlan, JobResult
-from ..reprozip import reprozip_pack_execution, reprozip_execution_metadata
-from .config import ExecutionEngineFilesConfig, ExecutionEngineServicesConfig
+from .job import (
+    ReproducibleJob,
+    JobResult,
+)
+
+from .config import (
+    ExecutionEngineFilesConfig,
+    ExecutionEngineServicesConfig,
+)
 
 
 class ExecutionEngine:

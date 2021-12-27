@@ -5,28 +5,24 @@
 # storm-core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
-from .models import ExecutableCommand, ExecutionPlan
-
-from .job import (
+from .base import (
     JobStatus,
     JobResult,
     ReproducibleJob,
-    CommandJob,
-    CompendiumJob,
 )
 
+from .command import CommandJob
+
+from .compendium import CompendiumJob
+
+
 __all__ = (
-    #
-    # Command module
-    #
-    "ExecutableCommand",
-    #
-    # Job Module
-    #
+    # Status
     "JobStatus",
+    # Results
     "JobResult",
+    # Jobs itself
     "ReproducibleJob",
     "CommandJob",
     "CompendiumJob",
-    "ExecutionPlan",
 )

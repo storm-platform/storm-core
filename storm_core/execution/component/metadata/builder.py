@@ -8,7 +8,7 @@
 from typing import List
 
 from ..base import BaseComponentExecutor
-from .components import MetadataComponent, FileChecksumMetadataComponent
+from .component import MetadataComponent, FileChecksumMetadataComponent
 
 
 class MetadataBuilderConfig:

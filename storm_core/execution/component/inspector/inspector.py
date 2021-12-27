@@ -8,7 +8,7 @@
 from typing import List
 
 from ..base import BaseComponentExecutor
-from .components import InspectorComponent, InspectorFileRemoverComponent
+from .component import InspectorComponent, InspectorFileRemoverComponent
 
 
 class InspectorConfig:

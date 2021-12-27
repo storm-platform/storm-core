@@ -53,6 +53,3 @@ def pass_component_executor(
         return wrapper
 
     return pass_instance
-
-
-__all__ = "pass_component_executor"

@@ -6,7 +6,7 @@
 # under the terms of the MIT License; see LICENSE file for more details.
 
 from .builder import MetadataBuilderConfig, MetadataBuilder
-from .components import MetadataComponent, FileChecksumMetadataComponent
+from .component import MetadataComponent, FileChecksumMetadataComponent
 
 
 __all__ = (

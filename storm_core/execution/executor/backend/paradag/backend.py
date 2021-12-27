@@ -5,12 +5,23 @@
 # storm-core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
+try:
+    from paradag import (
+        DAG,
+        MultiThreadProcessor,
+        SequentialProcessor,
+        dag_run,
+    )
+except ImportError:
+    raise ModuleNotFoundError(
+        "To use the Paradag backend, please, install the paradag library: `pip install paradag`"
+    )
+
 from typing import Callable, List
 
+from ....job import JobResult
 from ..base import GraphExecutor
-from ...api import ExecutionPlan, JobResult
-
-from paradag import DAG, MultiThreadProcessor, SequentialProcessor, dag_run
+from ....plan import ExecutionPlan
 
 
 class CustomizableSelector:
@@ -25,10 +36,10 @@ class CustomizableSelector:
 
 
 class ReproducibleExecutor:
-    """Reproduction executor of an execution graph.
+    """Reproduction executor of an graph.
 
     This class implements all the rules necessary for parallel
-    reproduction (multiprocessing) of a execution graph.
+    reproduction (multiprocessing) of a graph.
     """
 
     def __init__(self, operator_fnc, reproducible_pipeline: ExecutionPlan, **kwargs):
@@ -115,7 +126,9 @@ class ReproductionExecutor:
         self._level = files_dict
 
 
-class ParaDagBackend(GraphExecutor):
+class ParadagBackend(GraphExecutor):
+    """Paradag based Executor graph."""
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         n_process = kwargs.get("n_process", 1)
@@ -127,17 +140,22 @@ class ParaDagBackend(GraphExecutor):
         if n_process > 1:
             self._processor_class = MultiThreadProcessor
 
-    def _map(self, reproducible_pipeline: ExecutionPlan):
+    def _map(self, execution_plan: ExecutionPlan) -> DAG:
+        """Generate a digraph from an ``ExecutionPlan``.
 
+        Args:
+            execution_plan (ExecutionPlan): Execution Plan to be converted to a DAG object.
+
+        Returns:
+            DAG: DAG object.
+        """
         # creating the execution graph
         dag = DAG()
-        dag.add_vertex(*[v.execution_id for v in list(reproducible_pipeline.jobs())])
+        dag.add_vertex(*[v.execution_id for v in list(execution_plan.jobs())])
 
         # adding the graph edges
-        for job in reproducible_pipeline.jobs():
-            for job_predecessor in reproducible_pipeline.job_predecessors(
-                job.execution_id
-            ):
+        for job in execution_plan.jobs():
+            for job_predecessor in execution_plan.job_predecessors(job.execution_id):
                 dag.add_edge(job_predecessor.execution_id, job.execution_id)
 
         return dag
@@ -145,8 +163,18 @@ class ParaDagBackend(GraphExecutor):
     def map_execution(
         self, operator_fnc: Callable, execution_plan: ExecutionPlan, **kwargs
     ) -> List[JobResult]:
-        """Make the execution graph run."""
+        """Method called by the Execution Engine to produce the experiment results.
 
+        Args:
+            operator_fnc (Callable): Function to apply the Execution Plan jobs.
+
+            execution_plan (ExecutionPlan): Execution Plan to run.
+
+            kwargs: Extra parameters.
+
+        Returns:
+            List[JobResult]: List of job results (Produced by te operator).
+        """
         # defining the dag and the executor
         dag = self._map(execution_plan)
         executor = ReproducibleExecutor(operator_fnc, execution_plan)
@@ -167,8 +195,18 @@ class ParaDagBackend(GraphExecutor):
     def map_reproduction(
         self, operator_fnc: Callable, execution_plan: ExecutionPlan, **kwargs
     ) -> List[JobResult]:
-        """TODO"""
+        """Method called by the Execution Engine to reproduce a experiment results.
 
+        Args:
+            operator_fnc (Callable): function to apply the Execution Plan jobs.
+
+            execution_plan (ExecutionPlan): Execution Plan to run.
+
+            kwargs: Extra parameters.
+
+        Returns:
+            List[JobResult]: List of job results (Produced by te operator).
+        """
         # extracting extra parameters to reproduction
         reproduction_operator_options = kwargs.get("fnc_options", {})
 
@@ -186,6 +224,3 @@ class ParaDagBackend(GraphExecutor):
         )
 
         return executor.results
-
-
-__all__ = "ParaDagBackend"
