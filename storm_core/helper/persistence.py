@@ -5,9 +5,14 @@
 # storm-core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
-import dill
-from pathlib import Path
+try:
+    import dill
+except ImportError:
+    raise ModuleNotFoundError(
+        "To use the Persistence Helper module, please, install the dill library: `pip install dill`"
+    )
 
+from pathlib import Path
 from typing import Union
 
 

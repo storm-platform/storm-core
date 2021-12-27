@@ -26,4 +26,7 @@ def validate_checksum(
         raise RuntimeError(f"Invalid checksum for {file_path}!")
 
 
-__all__ = ("hash_file", "validate_checksum")
+__all__ = (
+    "hash_file",
+    "validate_checksum",
+)
