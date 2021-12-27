@@ -7,26 +7,23 @@
 
 """Reprozip Wrapper."""
 
-import fnmatch
 import os
-import uuid
 from functools import reduce
 from typing import Dict, List, Tuple
 
 import plumbum
-from reprounzip.common import load_config as load_config_file
-from reprounzip.utils import iteritems
+import fnmatch
+
 from reprozip.pack import pack
 from reprozip.tracer import trace
+
+from reprounzip.utils import iteritems
+from reprounzip.common import load_config as load_config_file
+
 from rpaths import Path
 from ruamel.yaml import YAML
 
 from .helper.hasher import hash_file
-
-
-def _generate_uuid() -> str:
-    """Generate a valid UUID4."""
-    return str(uuid.uuid4())
 
 
 def _filter_none_values(values: List) -> List:
