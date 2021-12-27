@@ -14,39 +14,11 @@ from igraph import Graph
 from typing import Dict, List, Union
 
 from copy import deepcopy
-from .engine.executor.api import ExecutionPlan, ExecutableCommand, CommandJob
 
-
-class ShellCommandParser:
-    """Single Command Parser class.
-
-    This class provides a helpful and straightforward way
-    to parse single shell command (and its parameters) to
-    a valid ``ExecutionPlan`` object instance.
-    """
-
-    @staticmethod
-    def parse(command: List[str], **kwargs) -> ExecutionPlan:
-        """Parse a single shell command to ExecutionPlan.
-
-        Args:
-            command (List[str]): Command in a list of strings (e.g., ['python3', 'script1.py']).
-
-            kwargs: Extra parameters to the ``ExecutableCommand`` initializer.
-
-        Returns:
-            ExecutionPlan: ExecutionPlan instance.
-        """
-        g = Graph(directed=True)
-
-        # creating the executable command
-        command_executable = ExecutableCommand(command, **kwargs)
-        command_job = CommandJob(command_executable)
-
-        # adding the command into the graph
-        g.add_vertex(name=command_job.execution_id, job=command_job)
-
-        return ExecutionPlan(g)
+from .files import FileLoader
+from ..execution.job import CommandJob
+from ..execution.plan import ExecutionPlan
+from ..execution.command import ExecutableCommand
 
 
 class StormfileCommandParameter:
@@ -60,9 +32,8 @@ class StormfileCommandParameter:
         """Initializer.
 
         Args:
-            parameter (Dict): Dicionary with the name of parameter and their definition.
+            parameter (Dict): Dictionary with the name of parameter and their definition.
         """
-
         self._parameter = parameter
         self._parameter_name = list(self._parameter.keys())[0]
 
@@ -74,6 +45,16 @@ class StormfileCommandParameter:
         if isinstance(value, dict):
             if "from_env" in value:
                 value = os.environ.get(value.get("from_env"))
+            elif "from_file" in value:
+                # getting the file definition
+                file_definition = value.get("from_file")
+
+                # type, path and load parameters
+                file_type = file_definition.get("type")
+                file_path = file_definition.get("path")
+                file_load_parameters = file_definition.get("params")
+
+                value = FileLoader.load(file_type, file_path, **file_load_parameters)
             else:
                 is_valid = False
         elif not isinstance(value, (str, list)):
@@ -298,7 +279,6 @@ def load_stormfile(stormfile_path: Union[str, Path]) -> ExecutionPlan:
     Returns:
         ExecutionPlan: ExecutionPlan object..
     """
-
     stormfile_path = Path(stormfile_path)
     if not stormfile_path.is_file():
         raise FileNotFoundError(f"Stormfile not found in {stormfile_path}")
