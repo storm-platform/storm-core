@@ -8,9 +8,9 @@
 from copy import deepcopy
 from typing import Tuple
 
-from .. import GraphManager
-from .search import SearchAccessor
-from ...core.compendium import ExecutionCompendium
+from .graph import GraphManager
+from .accessor import SearchAccessor
+from .model import ExecutionCompendium
 
 
 class ExecutionIndexer:
@@ -66,9 +66,9 @@ class ExecutionIndexer:
             execution_compendium.metadata,
         )
 
-        return list(
-            self.search.query.execution_compendium(name=execution_compendium.name)
-        )[0][
+        return list(self.search.query.query_compendia(name=execution_compendium.name))[
+            0
+        ][
             0
         ]  # should exists!
 
@@ -93,9 +93,9 @@ class ExecutionIndexer:
             outputs_checksum,
         )
 
-        return list(
-            self.search.query.execution_compendium(name=execution_compendium.name)
-        )[0][
+        return list(self.search.query.query_compendia(name=execution_compendium.name))[
+            0
+        ][
             0
         ]  # should exists!
 

@@ -7,22 +7,9 @@
 
 from typing import List, Tuple
 
-from ..manager import VertexStatus
-from ...core.compendium import ExecutionCompendium
-from ...engine.executor.api import ExecutableCommand
-
-
-class SearchAccessor:
-    def __init__(self, execution_indexer):
-        self._execution_indexer = execution_indexer
-
-    @property
-    def query(self):
-        return QuerySearch(self._execution_indexer)
-
-    @property
-    def faceted(self):
-        return FacetedIndexSearchAccessor(self._execution_indexer)
+from .graph import VertexStatus
+from .model import ExecutionCompendium
+from ..execution.command import ExecutableCommand
 
 
 class IndexerSearch:
@@ -31,7 +18,7 @@ class IndexerSearch:
 
 
 class QuerySearch(IndexerSearch):
-    def execution_compendium(self, **kwargs) -> List[Tuple[ExecutionCompendium, str]]:
+    def query_compendia(self, **kwargs) -> List[Tuple[ExecutionCompendium, str]]:
         # searching for compendium in the graph
         compendia_vertex = self._execution_indexer.graph_manager.search_vertex(**kwargs)
 
@@ -75,14 +62,14 @@ class QuerySearch(IndexerSearch):
 
 
 class FacetedIndexSearchAccessor(IndexerSearch):
-    def outdated_execution_compendia(self):
+    def get_outdated_compendia(self):
         _graph = self._execution_indexer.graph_manager.graph
         for vertex_index in _graph.topological_sorting(mode="out"):
             vertex = _graph.vs[vertex_index]
 
             if vertex["status"] == VertexStatus.Outdated:
                 selected_vertex = list(
-                    self._execution_indexer.search.query.execution_compendium(
+                    self._execution_indexer.search.query.query_compendia(
                         name=vertex["name"]
                     )
                 )
@@ -90,8 +77,6 @@ class FacetedIndexSearchAccessor(IndexerSearch):
 
 
 __all__ = (
-    # Accessor
-    "SearchAccessor",
     # Search types
     "IndexerSearch",
     "QuerySearch",

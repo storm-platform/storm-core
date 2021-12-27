@@ -5,8 +5,6 @@
 # storm-core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
-"""SpatioTemporal Open Research Manager Core Graph Manager."""
-
 import copy
 import itertools
 from datetime import datetime
@@ -230,7 +228,7 @@ class GraphManager(object):
         if actual_vertex:
             vertex = actual_vertex[0]
             self.update_vertex(
-                command,
+                name,
                 environment_package,
                 environment_package_checksum,
                 environment_package_checksum_algorithm,
@@ -375,6 +373,3 @@ class GraphManager(object):
                 _delete_vertex_only(vertex)
             self._rebuild_graph()
         self._define_vertices_required_inputs()
-
-
-__all__ = ("VertexStatus", "GraphManager")

@@ -10,7 +10,6 @@ from copy import deepcopy
 
 
 class ExecutionCompendium:
-
     def __init__(self, name, command, compendium_package, metadata):
         self._name = name
         self._command = command
@@ -40,8 +39,3 @@ class ExecutionCompendium:
     @property
     def compendium_package(self):
         return self._compendium_package
-
-
-__all__ = (
-    "ExecutionCompendium"
-)
