@@ -35,7 +35,7 @@ class ExecutionIndexer:
 
         return inputs_checksum, outputs_checksum
 
-    def index_execution(
+    def _add_execution(
         self, execution_compendium: ExecutionCompendium
     ) -> Tuple[ExecutionCompendium, str]:
         # preparing input and outputs (checksum)
@@ -66,13 +66,15 @@ class ExecutionIndexer:
             execution_compendium.metadata,
         )
 
-        return list(self.search.query.query_compendia(name=execution_compendium.name))[
-            0
-        ][
+        return list(
+            self.search.query.query_compendia(
+                command_checksum=execution_compendium.command.checksum
+            )
+        )[0][
             0
         ]  # should exists!
 
-    def edit_indexed_execution(
+    def _edit_indexed_execution(
         self, execution_compendium: ExecutionCompendium
     ) -> Tuple[ExecutionCompendium, str]:
         # preparing input and outputs (checksum)
@@ -86,6 +88,8 @@ class ExecutionIndexer:
             execution_compendium.compendium_package["key"],
             execution_compendium.compendium_package["checksum"],
             execution_compendium.compendium_package["algorithm"],
+            # Command
+            execution_compendium.command.checksum,
             # Metadata
             execution_compendium.metadata,
             # Files
@@ -93,11 +97,30 @@ class ExecutionIndexer:
             outputs_checksum,
         )
 
-        return list(self.search.query.query_compendia(name=execution_compendium.name))[
-            0
-        ][
+        return list(
+            self.search.query.query_compendia(
+                command_checksum=execution_compendium.command.checksum
+            )
+        )[0][
             0
         ]  # should exists!
+
+    def index_execution(
+        self, execution_compendium: ExecutionCompendium
+    ) -> Tuple[ExecutionCompendium, str]:
+
+        res = None
+        selected_vertex = list(
+            self.search.query.query_compendia(
+                command_checksum=execution_compendium.command.checksum
+            )
+        )
+
+        if selected_vertex:
+            res = self._edit_indexed_execution(execution_compendium)
+        else:
+            res = self._add_execution(execution_compendium)
+        return res
 
     def deindex_execution(
         self, execution_compendium_name: str, remove_related_compendia: bool = False

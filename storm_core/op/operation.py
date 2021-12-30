@@ -114,7 +114,7 @@ class ReproducibleOperations:
             )
 
             execution_result = [
-                self._execution_indexer.edit_indexed_execution(
+                self._execution_indexer.index_execution(
                     ExecutionCompendium(
                         command=ec.command,
                         name=ec.execution_id,

@@ -20,7 +20,9 @@ class IndexerSearch:
 class QuerySearch(IndexerSearch):
     def query_compendia(self, **kwargs) -> List[Tuple[ExecutionCompendium, str]]:
         # searching for compendium in the graph
-        compendia_vertex = self._execution_indexer.graph_manager.search_vertex(**kwargs)
+        compendia_vertex = (
+            self._execution_indexer.graph_manager.search_vertex(**kwargs) or []
+        )
 
         for compendium_vertex in compendia_vertex:
             # general definitions

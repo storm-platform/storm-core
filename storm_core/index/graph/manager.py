@@ -97,7 +97,7 @@ class GraphManager(object):
         Returns:
             VertexSeq: Sequence of found vertex.
         """
-        search_result = None
+        search_result = []
 
         if self._graph.vs:
             search_result = self._graph.vs.select(**kwargs)
@@ -223,7 +223,7 @@ class GraphManager(object):
         Note:
             If the command is already in the graph, it is only updated.
         """
-        actual_vertex = self.search_vertex(name=name)
+        actual_vertex = self.search_vertex(command_checksum=command_checksum)
 
         if actual_vertex:
             vertex = actual_vertex[0]
@@ -232,6 +232,7 @@ class GraphManager(object):
                 environment_package,
                 environment_package_checksum,
                 environment_package_checksum_algorithm,
+                command_checksum,
                 metadata,
                 inputs,
                 outputs,
@@ -264,6 +265,7 @@ class GraphManager(object):
         environment_package: str,
         environment_package_checksum: str,
         environment_package_checksum_algorithm: str,
+        command_checksum: str,
         metadata: Dict[str, Union[Dict, List, str]],
         inputs: List[str] = None,
         outputs: List[str] = None,
@@ -281,6 +283,8 @@ class GraphManager(object):
 
             environment_package_checksum_algorithm (str): ... ToDo
 
+            command_checksum (str): ... ToDo
+
             metadata (Dict[str, Union[Dict, List, str]]): ... ToDo
 
             inputs (Dict[Dict]): A dict with `path` and `checksum` of input files.
@@ -294,12 +298,13 @@ class GraphManager(object):
             The determination of the execution already added to the graph is done based on the `command`.
             The update considers only the change of `inputs`, `outputs`, and `repropack`.
         """
-        selected_vertex = self.search_vertex(name=name)
+        selected_vertex = self.search_vertex(command_checksum=command_checksum)
         if len(selected_vertex) == 1:  # bingo!
             vertex = selected_vertex[0]
 
             # define what attribute to update
             variables = {
+                "name": name,
                 "inputs": inputs,
                 "outputs": outputs,
                 "metadata": metadata,
