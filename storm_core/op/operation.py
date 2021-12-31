@@ -60,7 +60,7 @@ class ReproducibleOperations:
                     / execution_file
                 )
 
-    def execute(self, execution_plan: ExecutionPlan):
+    def run(self, execution_plan: ExecutionPlan):
         self._check_outdated_executions()
 
         # Searching for previous output files (checksum)
@@ -87,7 +87,7 @@ class ReproducibleOperations:
 
         return results
 
-    def rerun(self):
+    def update(self):
         _graph = self._execution_indexer.graph_manager.graph
 
         # preparing the outdated compendia that will be executed
@@ -130,7 +130,7 @@ class ReproducibleOperations:
 
         return execution_result
 
-    def reproduce(
+    def rerun(
         self,
         reproducible_storage: str,
         required_data_objects: Dict = None,
