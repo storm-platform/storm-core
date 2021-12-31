@@ -108,7 +108,8 @@ def plot_dot_indexed_executions(
             import graphviz
         except ImportError:
             raise ModuleNotFoundError(
-                "To render the ``dot`` file, please, install the graphviz library: `pip install graphviz`"
+                "To render the ``dot`` file, please, install the graphviz library: "
+                "`pip install graphviz` or `poetry add graphviz`"
             )
 
         graphviz.render("dot", "png", filename)

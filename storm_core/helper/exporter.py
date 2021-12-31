@@ -9,7 +9,8 @@ try:
     import bagit
 except ImportError:
     raise ModuleNotFoundError(
-        "To use the Export Helper module, please, install the python-bagit library: `pip install bagit`"
+        "To use the Export Helper module, please, install the python-bagit library: "
+        "`pip install bagit` or `poetry add bagit`"
     )
 
 import shutil
@@ -110,7 +111,10 @@ class BagItExporter:
         # move the validate files
         exported_data = tmp_dir / "data"
 
-        shutil.move(exported_data, output_path)
+        if output_path.exists():
+            shutil.rmtree(str(output_path))
+
+        shutil.move(str(exported_data), str(output_path))
         shutil.rmtree(tmp_dir)
 
         return output_path

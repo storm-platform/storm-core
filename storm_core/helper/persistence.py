@@ -9,7 +9,8 @@ try:
     import dill
 except ImportError:
     raise ModuleNotFoundError(
-        "To use the Persistence Helper module, please, install the dill library: `pip install dill`"
+        "To use the Persistence Helper module, please, install the dill library: "
+        "`pip install dill` or `poetry add dill`"
     )
 
 from pathlib import Path
