@@ -551,7 +551,7 @@ tests = ["coverage (>=4.5)", "coveralls (>=1.8)", "pytest (>=5.2)", "pytest-cov 
 [package.source]
 type = "git"
 url = "https://github.com/storm-platform/storm-hasher.git"
-reference = "master"
+reference = "5fd1cfd"
 resolved_reference = "5fd1cfdbb375e6661d19905a75c909bc6dc0e631"
 
 [[package]]
@@ -629,7 +629,7 @@ ray-backend = ["ray"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "c5c1785be062c6e3803887d58b91f9b7a9e40cf903c95786999a0e685c3364fb"
+content-hash = "02c64f15265a387975b590c2f8a224964bdbd30311f294a21d899667adef0ecb"
 
 [metadata.files]
 attrs = [
