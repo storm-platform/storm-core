@@ -67,7 +67,7 @@ class ExecutionIndexer:
         )
 
         return list(
-            self.search.query.query_compendia(
+            self.search.query.query(
                 command_checksum=execution_compendium.command.checksum
             )
         )[0][
@@ -98,7 +98,7 @@ class ExecutionIndexer:
         )
 
         return list(
-            self.search.query.query_compendia(
+            self.search.query.query(
                 command_checksum=execution_compendium.command.checksum
             )
         )[0][
@@ -111,7 +111,7 @@ class ExecutionIndexer:
 
         res = None
         selected_vertex = list(
-            self.search.query.query_compendia(
+            self.search.query.query(
                 command_checksum=execution_compendium.command.checksum
             )
         )

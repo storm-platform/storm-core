@@ -304,7 +304,7 @@ class GraphManager(object):
 
             # define what attribute to update
             variables = {
-                "name": name,
+                # "name": name,
                 "inputs": inputs,
                 "outputs": outputs,
                 "metadata": metadata,
