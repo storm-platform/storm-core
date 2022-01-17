@@ -9,11 +9,11 @@ import os
 import shutil
 from tempfile import mkdtemp
 
+from .base import ReproducibleJob, JobResult, JobStatus
 from ...helper.hasher import (
     validate_checksum,
     hash_file,
 )
-
 from ...reprozip import (
     reprounzip_add_environment_variables,
     reprounzip_setup,
@@ -21,7 +21,6 @@ from ...reprozip import (
     reprozip_get_output_files,
     reprounzip_download_file,
 )
-from .base import ReproducibleJob, JobResult, JobStatus
 
 
 class CompendiumJob(ReproducibleJob):
@@ -45,7 +44,13 @@ class CompendiumJob(ReproducibleJob):
     def output_directory(self, value):
         self._output_directory = value
 
-    def submit(self, **kwargs) -> JobResult:
+    def submit(
+        self,
+        required_data_objects=None,
+        previous_output_files=None,
+        required_environment_variables=None,
+        **kwargs,
+    ) -> JobResult:
         """Execute the operations for experiment reproduction.
 
         Args:
@@ -69,11 +74,9 @@ class CompendiumJob(ReproducibleJob):
         job_status = JobStatus.SUCCESSFULLY
 
         # retrieving inputs
-        required_data_objects = kwargs.get("required_data_objects", {})
-        previous_output_files = kwargs.get("previous_output_files", [])
-        required_environment_variables = kwargs.get(
-            "required_environment_variables", []
-        )
+        required_data_objects = required_data_objects or {}
+        previous_output_files = previous_output_files or []
+        required_environment_variables = required_environment_variables or []
 
         # validating the package checksum
         compendium_package = self._compendium.compendium_package
@@ -102,6 +105,31 @@ class CompendiumJob(ReproducibleJob):
             required_objects_checksums = required_data_objects["checksum"]
             compendium_external_inputs_required_checksum = (
                 self._compendium.metadata.get("external_inputs_required", [])
+            )
+
+            # we need to verify the unpacked files! A ``external_inputs_required`` only
+            # target the files "external from script". So, a file listed in the ``external_inputs_required``
+            # may already be defined in the reprozip bundle. Here, we only need of "unpacked files".
+            unpacked_files = self._compendium.metadata["others"]["unpacked_files"][
+                "datasources"
+            ]
+
+            # getting the filename of the input files.
+            _inputs = self._compendium.metadata["inputs"]
+            input_objects = list(map(lambda x: x["key"], _inputs))
+
+            # extracting the unpacked inputs.
+            unpacked_files = [input_objects.index(uf) for uf in unpacked_files]
+
+            # filter the checksum for the unpacked files.
+            unpacked_files = [_inputs[idx]["checksum"] for idx in unpacked_files]
+
+            # filtering the required checksum file list using the unpacked files' checksum.
+            compendium_external_inputs_required_checksum = list(
+                filter(
+                    lambda x: x in unpacked_files,
+                    compendium_external_inputs_required_checksum,
+                )
             )
 
             required_objects_checksum_list = list(

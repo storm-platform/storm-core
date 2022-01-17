@@ -129,6 +129,9 @@ class ReproductionExecutor:
 class ParadagBackend(GraphExecutor):
     """Paradag based Executor graph."""
 
+    name = "paradag.parallel"
+    """Graph executor name."""
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         n_process = kwargs.get("n_process", 1)

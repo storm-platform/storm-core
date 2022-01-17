@@ -5,8 +5,8 @@
 # storm-core is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 
-from typing import Callable, List
 from abc import ABC, abstractmethod
+from typing import Callable, List
 
 from ...job import JobResult
 from ...plan import ExecutionPlan
@@ -22,6 +22,9 @@ class GraphExecutor(ABC):
         1. Methods to produce and reproduce results;
         2. Handle the execution plan execution order.
     """
+
+    name = None
+    """Graph executor name."""
 
     @abstractmethod
     def __init__(self, **kwargs):

@@ -13,18 +13,20 @@ except ImportError:
         "To use the Ray backend, please, install the Ray library: `pip install ray`"
     )
 
-from itertools import chain
 from functools import reduce
-
+from itertools import chain
 from typing import Callable, List
 
-from ....job import JobResult
 from ..base import GraphExecutor
+from ....job import JobResult
 from ....plan import ExecutionPlan
 
 
 class RayBackend(GraphExecutor):
     """Ray based Executor graph."""
+
+    name = "ray.distributed"
+    """Graph executor name."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
