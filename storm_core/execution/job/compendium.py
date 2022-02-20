@@ -238,6 +238,15 @@ class CompendiumJob(ReproducibleJob):
                 os.path.join(download_files_path, file)
                 for file in experiment_output_files
             ]
+
+            # filtering by the files available
+            # note: in some cases, the reprozip identify output
+            # files there are not available (e.g., temporary files).
+            # This filter, remove these files.
+            generated_files = list(
+                filter(lambda file: os.path.exists(file), generated_files)
+            )
+
             generated_files_checksum = [
                 hash_file(f, self._compendium.compendium_package["algorithm"])
                 for f in generated_files
