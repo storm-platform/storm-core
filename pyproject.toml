@@ -43,7 +43,7 @@ reprounzip-docker = "^1.1"
 #
 # Storm
 #
-storm-hasher = { git = "https://github.com/storm-platform/storm-hasher.git", rev = "5fd1cfd"}
+storm-hasher = { git = "https://github.com/storm-platform/storm-hasher.git", rev = "master"}
 
 #
 # Optional modules
